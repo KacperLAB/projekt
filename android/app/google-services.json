@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "585508054843",
+    "firebase_url": "https://aplikacja-promocje-87e96-default-rtdb.firebaseio.com",
+    "project_id": "aplikacja-promocje-87e96",
+    "storage_bucket": "aplikacja-promocje-87e96.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585508054843:android:f7d188790f4c558b2c391e",
+        "android_client_info": {
+          "package_name": "com.example.firebase_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKOco1rmop7oZcsI1NHVipvfC5IpGYIyE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
