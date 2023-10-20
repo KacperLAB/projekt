@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:list_picker/list_picker.dart';
 
 class FormScreen extends StatefulWidget {
-
   FormScreen({super.key});
 
   @override
@@ -11,8 +10,6 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreenState extends State<FormScreen> {
-
-
   final listPickerField = ListPickerField(
     label: "Kategoria",
     items: const ["Owoce", "Warzywa", "Mięso", "Nabiał", "Napoje", "Inne"],
@@ -57,38 +54,43 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Formularz"),
-      ),
+        appBar: AppBar(
+          title: const Text("Formularz"),
+        ),
         body: Center(
-        child: Container(
+            child: Container(
           padding: const EdgeInsets.all(10),
-          child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-              TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Nazwa")),
-              TextField(keyboardType: TextInputType.numberWithOptions(decimal: true),controller: _oldPriceController,decoration: const InputDecoration(labelText: "Stara cena")),
-              TextField(keyboardType: TextInputType.numberWithOptions(decimal: true),controller: _newPriceController,decoration: const InputDecoration(labelText: "Nowa cena")),
-              listPickerField,
-                Text("${selectedDate.toLocal()}".split(' ')[0]),
-                Text("ts_int:"+"${ts}"),
-                ElevatedButton(
-                  onPressed: () => _selectDate(context),
-                  child: const Text('Data od'),
-                ),
-
-                Text("${selectedDate2.toLocal()}".split(' ')[0]),
-                Text("ts2_int"+"${ts2}"),
-                ElevatedButton(
-                  onPressed: () => _selectDate2(context),
-                  child: const Text('Data do'),
-                ),
-                ElevatedButton(onPressed: () {
-                  if (ts2>=ts) {
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Nazwa")),
+            TextField(
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                controller: _oldPriceController,
+                decoration: const InputDecoration(labelText: "Stara cena")),
+            TextField(
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                controller: _newPriceController,
+                decoration: const InputDecoration(labelText: "Nowa cena")),
+            listPickerField,
+            Text("${selectedDate.toLocal()}".split(' ')[0]),
+            Text("ts_int:" + "${ts}"),
+            ElevatedButton(
+              onPressed: () => _selectDate(context),
+              child: const Text('Data od'),
+            ),
+            Text("${selectedDate2.toLocal()}".split(' ')[0]),
+            Text("ts2_int" + "${ts2}"),
+            ElevatedButton(
+              onPressed: () => _selectDate2(context),
+              child: const Text('Data do'),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  if (ts2 >= ts) {
                     double stara = double.parse(_oldPriceController.text);
                     double nowa = double.parse(_newPriceController.text);
                     double przecena = 100 - ((nowa * 100) / stara);
@@ -101,9 +103,9 @@ class _FormScreenState extends State<FormScreen> {
                       "przecena": przecena.toStringAsFixed(0),
                       "data_od": selectedDate.toString(),
                       "data_do": selectedDate2.toString(),
+                      "ocena": 0
                     };
                     dbRef.child("Oferty").push().set(data).then((value) {
-
                       Navigator.of(context).pop();
                     });
                   } else {
@@ -124,9 +126,9 @@ class _FormScreenState extends State<FormScreen> {
                       },
                     );
                   }
-                }, child: Text("Dodaj ogłoszenie"))
-          ]
-        ),
-      )));
+                },
+                child: Text("Dodaj ogłoszenie"))
+          ]),
+        )));
   }
 }

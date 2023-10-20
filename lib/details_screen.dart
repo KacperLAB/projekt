@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 
 class OfferDetailsScreen extends StatefulWidget {
   final Student student;
+
   OfferDetailsScreen({required this.student});
 
   @override
@@ -13,7 +14,7 @@ class OfferDetailsScreen extends StatefulWidget {
 
 class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   final TextEditingController _commentController = TextEditingController();
-  DatabaseReference dbRef = FirebaseDatabase.instance.reference();
+  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   List<Comment> comments = [];
 
   @override
@@ -23,9 +24,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   }
 
   void fetchComments() async {
-    DataSnapshot dataSnapshot = await dbRef.child('Oferty/${widget.student.key}/komentarze').get();
+    DataSnapshot dataSnapshot =
+        await dbRef.child('Oferty/${widget.student.key}/komentarze').get();
     if (dataSnapshot.value != null && dataSnapshot.value is Map) {
-      Map<dynamic, dynamic> commentsData = dataSnapshot.value as Map<dynamic, dynamic>;
+      Map<dynamic, dynamic> commentsData =
+          dataSnapshot.value as Map<dynamic, dynamic>;
       List<Comment> commentList = [];
       commentsData.forEach((key, value) {
         commentList.add(Comment(
@@ -41,6 +44,18 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     }
   }
 
+  void incrementRating() async {
+    FirebaseDatabase.instance
+        .ref('Oferty/${widget.student.key}/ocena')
+        .set(ServerValue.increment(1));
+  }
+
+  void decrementRating() async {
+    FirebaseDatabase.instance
+        .ref('Oferty/${widget.student.key}/ocena')
+        .set(ServerValue.increment(-1));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,8 +69,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           Text("Stara cena: ${widget.student.studentData!.stara_cena!}"),
           Text("Nowa cena: ${widget.student.studentData!.nowa_cena!}"),
           Text("Przecena: ${widget.student.studentData!.przecena!}%"),
-          Text("Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
-          Text("Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
+          Text(
+              "Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
+          Text(
+              "Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
+          Text("Ocena: ${widget.student.studentData!.ocena!}"),
           TextField(controller: _commentController),
           ElevatedButton(
             onPressed: () {
@@ -63,29 +81,47 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
               String timestamp = DateTime.now().toUtc().toString();
 
               Comment newComment = Comment(
-                author: "Testowy", // Tutaj możesz ustawić autora komentarza
+                author: "Testowy",
+                //tytaj bedzie email/login zalogowanego uzytkownika
                 text: commentText,
                 timestamp: timestamp,
               );
 
-              dbRef.child('Oferty/${widget.student.key}/komentarze').push().set(newComment.toJson());
+              dbRef
+                  .child('Oferty/${widget.student.key}/komentarze')
+                  .push()
+                  .set(newComment.toJson());
               _commentController.clear();
               fetchComments();
             },
             child: Text("Dodaj komentarz"),
           ),
+          Row(
+            children: [
+              ElevatedButton(
+                  onPressed: () {
+                    incrementRating();
+                  },
+                  child: const Icon(Icons.add)),
+              ElevatedButton(
+                  onPressed: () {
+                    decrementRating();
+                  },
+                  child: const Icon(Icons.remove)),
+            ],
+          ),
           Text("Komentarze:"),
           Expanded(
             child: comments.isNotEmpty
                 ? ListView.builder(
-              itemCount: comments.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(comments[index].text),
-                  subtitle: Text("Author: ${comments[index].author}"),
-                );
-              },
-            )
+                    itemCount: comments.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(comments[index].text),
+                        subtitle: Text("Author: ${comments[index].author}"),
+                      );
+                    },
+                  )
                 : Center(child: Text("Brak komentarzy.")),
           ),
         ],

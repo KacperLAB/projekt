@@ -3,7 +3,6 @@ import 'package:firebase_project/firebase_options.dart';
 import 'package:firebase_project/home_screen.dart';
 import 'package:flutter/material.dart';
 
-
 //pub.dev , flutterfire
 
 void main() async {
@@ -16,6 +15,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,6 +28,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
