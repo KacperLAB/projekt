@@ -15,6 +15,7 @@ class StudentData {
   String? data_do;
   String? komentarze;
   int? ocena;
+  String? image_path;
 
   StudentData(
       {this.nazwa,
@@ -24,7 +25,8 @@ class StudentData {
       this.przecena,
       this.data_od,
       this.data_do,
-      this.ocena});
+      this.ocena,
+      this.image_path});
 
   StudentData.fromJson(Map<dynamic, dynamic> json) {
     nazwa = json["nazwa"];
@@ -35,5 +37,6 @@ class StudentData {
     data_od = json["data_od"];
     data_do = json["data_do"];
     ocena = json["ocena"];
+    image_path = json["image_path"];
   }
 }

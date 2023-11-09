@@ -119,30 +119,46 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
       },
       child: Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.all(5),
-          margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.black)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(student.studentData!.nazwa!),
-                  Text(student.studentData!.kategoria!),
-                  Text(student.studentData!.stara_cena!),
-                  Text(student.studentData!.nowa_cena!),
-                  Text(student.studentData!.przecena! + "%"),
-                  Text(student.studentData!.data_od!.split(' ')[0]),
-                  Text(student.studentData!.data_do!.split(' ')[0]),
-                ],
+        width: MediaQuery.of(context).size.width,
+        padding: const EdgeInsets.all(5),
+        margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.black),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(student.studentData!.nazwa!),
+                Text(student.studentData!.kategoria!),
+                Text(student.studentData!.stara_cena!),
+                Text(student.studentData!.nowa_cena!),
+                Text(student.studentData!.przecena! + "%"),
+                Text(student.studentData!.data_od!.split(' ')[0]),
+                Text(student.studentData!.data_do!.split(' ')[0]),
+              ],
+            ),
+            if (student.studentData!.image_path != null)
+              Image.network(
+                student.studentData!.image_path!,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
               ),
-            ],
-          )),
+            if (student.studentData!.image_path == null)
+              Image.asset(
+                'assets/placeholder_image.png', // Zastępcze zdjęcie
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
