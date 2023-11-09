@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:list_picker/list_picker.dart';
 
 class FormScreen extends StatefulWidget {
@@ -16,6 +19,19 @@ class _FormScreenState extends State<FormScreen> {
   );
 
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
+  File? _displayedImage;
+
+  Future<void> _pickImageFromGallery() async {
+    XFile? pickedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        File? file = File(pickedImage.path);
+        _displayedImage = file;
+      });
+    }
+  }
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _oldPriceController = TextEditingController();
@@ -127,7 +143,15 @@ class _FormScreenState extends State<FormScreen> {
                     );
                   }
                 },
-                child: Text("Dodaj ogłoszenie"))
+                child: Text("Dodaj ogłoszenie")),
+            ElevatedButton(
+                onPressed: _pickImageFromGallery, child: Text("Wybierz obraz")),
+            _displayedImage != null
+                ? Image.file(
+                    _displayedImage!,
+                    height: 100,
+                  )
+                : Text("")
           ]),
         )));
   }

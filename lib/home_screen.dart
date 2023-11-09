@@ -7,7 +7,6 @@ import 'package:firebase_project/details_screen.dart';
 import 'package:firebase_project/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -57,26 +56,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text("Odswiez")),
             ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()));
                 },
                 child: Text("Logowanie i rejestracja")),
-            if(user!= null)
-            ElevatedButton(onPressed: () {
-              firebaseAuth.signOut();
-              setState(() {
-                user = null;
-              });
-            }, child: Text("Wyloguj")),
-            ElevatedButton(onPressed: () {
-              setState(() {
-                user = firebaseAuth.currentUser?.email;
-              });
-            }, child: Text("aktu")),
-            if(user == null)
-              Text("")
-            else
-             Text("Zalogowano jako:" + user!),
+            if (user != null)
+              ElevatedButton(
+                  onPressed: () {
+                    firebaseAuth.signOut();
+                    setState(() {
+                      user = null;
+                    });
+                  },
+                  child: Text("Wyloguj")),
+            ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    user = firebaseAuth.currentUser?.email;
+                  });
+                },
+                child: Text("aktu")),
+            if (user == null) Text("") else Text("Zalogowano jako:" + user!),
           ],
         ),
       ),
@@ -85,8 +85,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _nameController.text = "";
           _oldPriceController.text = "";
           _newPriceController.text = "";
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => FormScreen()));
+          if (user != null)
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => FormScreen()));
+          else
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => LoginScreen()));
         },
         child: const Icon(Icons.add),
       ),
@@ -105,7 +109,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
     });
   }
-
 
   //widget pojedynczej oferty
   Widget studentWidget(Student student) {
