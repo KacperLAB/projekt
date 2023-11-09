@@ -4,6 +4,9 @@ import 'package:firebase_project/models/student_model.dart';
 import 'package:flutter/material.dart';
 import 'package:list_picker/list_picker.dart';
 import 'package:firebase_project/details_screen.dart';
+import 'package:firebase_project/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,12 +15,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
 class _HomeScreenState extends State<HomeScreen> {
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _oldPriceController = TextEditingController();
   final TextEditingController _newPriceController = TextEditingController();
+  String? user = firebaseAuth.currentUser?.email;
 
   List<Student> studentList = [];
 
@@ -48,7 +54,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   studentList.clear();
                   retrieveStudentData();
                 },
-                child: Text("Odswiez"))
+                child: Text("Odswiez")),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                },
+                child: Text("Logowanie i rejestracja")),
+            if(user!= null)
+            ElevatedButton(onPressed: () {
+              firebaseAuth.signOut();
+              setState(() {
+                user = null;
+              });
+            }, child: Text("Wyloguj")),
+            ElevatedButton(onPressed: () {
+              setState(() {
+                user = firebaseAuth.currentUser?.email;
+              });
+            }, child: Text("aktu")),
+            if(user == null)
+              Text("")
+            else
+             Text("Zalogowano jako:" + user!),
           ],
         ),
       ),
@@ -77,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
     });
   }
+
 
   //widget pojedynczej oferty
   Widget studentWidget(Student student) {
