@@ -37,8 +37,18 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+  Future<void> _pickImageFromCamera() async {
+    XFile? pickedImage =
+    await ImagePicker().pickImage(source: ImageSource.camera);
+    if (pickedImage != null) {
+      setState(() {
+        _displayedImage = File(pickedImage.path);
+      });
+    }
+  }
+
   Future<String> _uploadImage(String offerKey) async {
-    String imagePath = '';
+    String imagePath="";
     if (_displayedImage != null) {
       try {
         await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!);
@@ -47,7 +57,10 @@ class _FormScreenState extends State<FormScreen> {
         print("Error uploading image: $e");
       }
     }
-    return imagePath;
+    if(imagePath.isEmpty)
+      return "https://firebasestorage.googleapis.com/v0/b/aplikacja-promocje-87e96.appspot.com/o/images%2Fplaceholder_image.png?alt=media&token=2b162981-1df6-4bf0-b73a-1fd294c3ed64";
+    else
+      return imagePath;
   }
 
   final TextEditingController _nameController = TextEditingController();
@@ -183,14 +196,18 @@ class _FormScreenState extends State<FormScreen> {
               ),
               ElevatedButton(
                 onPressed: _pickImageFromGallery,
-                child: Text("Wybierz obraz"),
+                child: Text("Wybierz obraz z galerii"),
+              ),
+              ElevatedButton(
+                onPressed: _pickImageFromCamera,
+                child: Text("Zrób zdjęcie"),
               ),
               _displayedImage != null
                   ? Image.file(
                       _displayedImage!,
                       height: 100,
                     )
-                  : Text(""),
+                  : Container(),
             ],
           ),
         ),

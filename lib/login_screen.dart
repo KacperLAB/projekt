@@ -11,7 +11,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   String? errorMessage = '';
   final TextEditingController _emailController = TextEditingController();
@@ -20,8 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> loginUser() async {
     try {
       await firebaseAuth.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -33,9 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: const Text("Logowanie")
-      ),
+      appBar: AppBar(title: const Text("Logowanie")),
       body: Center(
         child: Column(
           children: [
@@ -46,20 +43,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: "Haslo")),
-            ElevatedButton(onPressed: () {
-              loginUser();
-              print(errorMessage);
-              Navigator.pop(context, MaterialPageRoute(builder: (context) => HomeScreen()));
-            }, child: Text("Zaloguj")),
-            ElevatedButton(onPressed: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => SignupScreen()));
-            }, child: Text("Rejestracja"))
+            ElevatedButton(
+                onPressed: () {
+                  loginUser();
+                  print(errorMessage);
+                  Navigator.pop(context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()));
+                },
+                child: Text("Zaloguj")),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => SignupScreen()));
+                },
+                child: Text("Rejestracja"))
           ],
         ),
       ),
     );
   }
-
-
 }

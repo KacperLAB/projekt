@@ -103,10 +103,28 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           Text("Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
           Text("Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
           Text("Ocena oferty: $offerRating"),
+          if (widget.student.studentData!.image_path != null)
+            Image.network(
+              widget.student.studentData!.image_path!,
+              height: 100,
+              width: 100,
+              fit: BoxFit.cover,
+            ),
+          if (widget.student.studentData!.image_path == null)
+            Image.asset(
+              'assets/placeholder_image.png', // Zastępcze zdjęcie
+              height: 100,
+              width: 100,
+              fit: BoxFit.cover,
+            ),
+          if(user != null)
           ElevatedButton(
             onPressed: increaseRating,
-            child: Text("Zwiększ ocenę"),
-          ),
+            child: Text("Zwiększ ocenę")
+          )
+          else
+            Container(),
+          if(user != null)
           ElevatedButton(
             onPressed: () {
               decreaseRating();
@@ -115,13 +133,21 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 Navigator.of(context).pop();
               }
             },
-            child: Text("Zmniejsz ocenę"),
-          ),
-          TextField(controller: _commentController),
+            child: Text("Zmniejsz ocenę")
+          )
+          else
+            Container(),
+          if(user != null)
+          TextField(controller: _commentController)
+          else
+            Container(),
+          if(user != null)
           ElevatedButton(
             onPressed: addComment,
             child: Text("Dodaj komentarz"),
-          ),
+          )
+          else
+            Container(),
           Text("Komentarze:"),
           Expanded(
             child: comments.isNotEmpty

@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     retrieveStudentData();
+    user = firebaseAuth.currentUser?.email;
   }
 
   final listPickerField = ListPickerField(
@@ -54,12 +55,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   retrieveStudentData();
                 },
                 child: Text("Odswiez")),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()));
-                },
-                child: Text("Logowanie i rejestracja")),
+            if (user == null)
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()));
+                  },
+                  child: Text("Logowanie i rejestracja"))
+            else
+              Container(),
             if (user != null)
               ElevatedButton(
                   onPressed: () {
@@ -76,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 child: Text("aktu")),
-            if (user == null) Text("") else Text("Zalogowano jako:" + user!),
+            if (user == null) Container() else Text("Zalogowano jako:" + user!),
           ],
         ),
       ),
