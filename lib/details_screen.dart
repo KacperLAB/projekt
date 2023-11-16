@@ -3,6 +3,8 @@ import 'package:firebase_project/models/student_model.dart';
 import 'package:firebase_project/models/comment_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_project/map_screen.dart';
 
 class OfferDetailsScreen extends StatefulWidget {
   final Student student;
@@ -27,6 +29,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     super.initState();
     fetchComments();
   }
+
 
   void fetchComments() async {
     DataSnapshot dataSnapshot = await dbRef.child('Oferty/${widget.student.key}/komentarze').get();
@@ -137,6 +140,17 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           )
           else
             Container(),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MapScreen(student: widget.student),
+                ),
+              );
+            },
+            child: Text("Pokaż lokalizację na mapie"),
+          ),
           if(firebaseAuth.currentUser?.email != null)
           TextField(controller: _commentController)
           else
@@ -167,3 +181,5 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     );
   }
 }
+
+

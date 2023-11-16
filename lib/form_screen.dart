@@ -156,9 +156,8 @@ class _FormScreenState extends State<FormScreen> {
         "ocena": 0,
         "autor_id": firebaseAuth.currentUser!.uid,
         "image_path": imagePath,
-        "location": _selectedLocation != null
-            ? {"latitude": _selectedLocation!.latitude, "longitude": _selectedLocation!.longitude}
-            : null,
+        "latitude": _selectedLocation!.latitude,
+        "longitude": _selectedLocation!.longitude,
       };
 
       // Zapisz ofertę w bazie danych
