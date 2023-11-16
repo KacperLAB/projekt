@@ -45,10 +45,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: const InputDecoration(labelText: "Haslo")),
             ElevatedButton(
                 onPressed: () {
-                  loginUser();
-                  print(errorMessage);
-                  Navigator.pop(context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()));
+                  if(_emailController.text.isEmpty || _passwordController.text.isEmpty)
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Wypełnij wszystkie pola'),
+                    ));
+                  else {
+                    loginUser();
+                    print(errorMessage);
+                    Navigator.pop(context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                  }
                 },
                 child: Text("Zaloguj")),
             ElevatedButton(

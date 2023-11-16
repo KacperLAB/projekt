@@ -3,6 +3,9 @@
         android:label="firebase_project"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD21_QoN4FSIG0pcEx1q6gA-Q2OlT82s8I"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

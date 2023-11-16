@@ -55,16 +55,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   retrieveStudentData();
                 },
                 child: Text("Odswiez")),
-            if (user == null)
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()));
-                  },
-                  child: Text("Logowanie i rejestracja"))
+            if(firebaseAuth.currentUser?.email == null)
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()));
+                },
+                child: Text("Logowanie i rejestracja"))
             else
               Container(),
-            if (user != null)
+            if (firebaseAuth.currentUser?.email != null)
               ElevatedButton(
                   onPressed: () {
                     firebaseAuth.signOut();
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 child: Text("aktu")),
-            if (user == null) Container() else Text("Zalogowano jako:" + user!),
+            if (firebaseAuth.currentUser?.email == null) Container() else Text("Zalogowano jako: ${firebaseAuth.currentUser?.email!}"),
           ],
         ),
       ),
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _nameController.text = "";
           _oldPriceController.text = "";
           _newPriceController.text = "";
-          if (user != null)
+          if (firebaseAuth.currentUser?.email != null)
             Navigator.push(
                 context, MaterialPageRoute(builder: (context) => FormScreen()));
           else

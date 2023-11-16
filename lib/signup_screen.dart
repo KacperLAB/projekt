@@ -46,9 +46,16 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(labelText: "Haslo")),
             ElevatedButton(onPressed: () {
-              createUser();
-              print(errorMessage);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+              if(_emailController.text.isEmpty || _passwordController.text.isEmpty)
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Wypełnij wszystkie pola'),
+                ));
+              else {
+                createUser();
+                print(errorMessage);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()));
+              }
             }, child: Text("Rejestracja"))
           ],
         ),

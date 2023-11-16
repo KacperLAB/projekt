@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:list_picker/list_picker.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 class FormScreen extends StatefulWidget {
   FormScreen({super.key});
@@ -17,6 +19,7 @@ class FormScreen extends StatefulWidget {
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _FormScreenState extends State<FormScreen> {
+  String selectedLocationText = ""; //do testu lokalizacji
   final listPickerField = ListPickerField(
     label: "Kategoria",
     items: const ["Owoce", "Warzywa", "Mięso", "Nabiał", "Napoje", "Inne"],
@@ -27,9 +30,35 @@ class _FormScreenState extends State<FormScreen> {
 
   File? _displayedImage;
 
+  late GoogleMapController _mapController;
+  LocationData? _currentLocation;
+  LatLng? _selectedLocation;
+
+  Future<void> _getCurrentLocation() async {
+    Location location = Location();
+    try {
+      _currentLocation = await location.getLocation();
+
+      // Przesuń mapę do aktualnej lokalizacji
+      /*_mapController.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!),
+          15.0,
+        ),
+      );*/
+      setState(() {
+        _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+        selectedLocationText = "Latitude: ${_selectedLocation!.latitude}, Longitude: ${_selectedLocation!.longitude}";
+      });
+
+    } catch (e) {
+      print("Error getting location: $e");
+    }
+  }
+
   Future<void> _pickImageFromGallery() async {
     XFile? pickedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+    await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       setState(() {
         _displayedImage = File(pickedImage.path);
@@ -48,7 +77,7 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   Future<String> _uploadImage(String offerKey) async {
-    String imagePath="";
+    String imagePath = "";
     if (_displayedImage != null) {
       try {
         await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!);
@@ -57,7 +86,7 @@ class _FormScreenState extends State<FormScreen> {
         print("Error uploading image: $e");
       }
     }
-    if(imagePath.isEmpty)
+    if (imagePath.isEmpty)
       return "https://firebasestorage.googleapis.com/v0/b/aplikacja-promocje-87e96.appspot.com/o/images%2Fplaceholder_image.png?alt=media&token=2b162981-1df6-4bf0-b73a-1fd294c3ed64";
     else
       return imagePath;
@@ -74,10 +103,11 @@ class _FormScreenState extends State<FormScreen> {
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate,
-        firstDate: DateTime.now(),
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
     if (picked != null) {
       setState(() {
         selectedDate = picked;
@@ -88,10 +118,11 @@ class _FormScreenState extends State<FormScreen> {
 
   Future<void> _selectDate2(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate,
-        firstDate: selectedDate,
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: selectedDate,
+      firstDate: selectedDate,
+      lastDate: DateTime(2101),
+    );
     if (picked != null) {
       setState(() {
         selectedDate2 = picked;
@@ -124,7 +155,10 @@ class _FormScreenState extends State<FormScreen> {
         "data_do": selectedDate2.toString(),
         "ocena": 0,
         "autor_id": firebaseAuth.currentUser!.uid,
-        "image_path": imagePath
+        "image_path": imagePath,
+        "location": _selectedLocation != null
+            ? {"latitude": _selectedLocation!.latitude, "longitude": _selectedLocation!.longitude}
+            : null,
       };
 
       // Zapisz ofertę w bazie danych
@@ -151,13 +185,58 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+  Future<void> _pickLocationOnMap() async {
+    // Otwórz ekran z mapą do wyboru lokalizacji
+    // Tutaj możesz użyć dowolnej biblioteki do wyboru lokalizacji na mapie
+    // Na przykład, możesz użyć pakietu `flutter_map` lub innych dostępnych na pub.dev
+    // W tym przykładzie, zakładam, że używasz Google Maps, więc korzystamy z GoogleMap
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Wybierz lokalizację na mapie'),
+          content: SizedBox(
+            height: 300,
+            width: 300,
+            child: GoogleMap(
+              onMapCreated: (controller) {
+                setState(() {
+                  _mapController = controller;
+                });
+              },
+              initialCameraPosition: CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 2.0,
+              ),
+              onTap: (LatLng point) {
+                setState(() {
+                  _selectedLocation = point;
+                  selectedLocationText = "Latitude: ${point.latitude}, Longitude: ${point.longitude}";
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Anuluj'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Formularz"),
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -204,10 +283,20 @@ class _FormScreenState extends State<FormScreen> {
               ),
               _displayedImage != null
                   ? Image.file(
-                      _displayedImage!,
-                      height: 100,
-                    )
+                _displayedImage!,
+                height: 100,
+              )
                   : Container(),
+              ElevatedButton(
+                onPressed: _getCurrentLocation,
+                child: Text("Pobierz obecną lokalizację"),
+              ),
+              ElevatedButton(
+                onPressed: _pickLocationOnMap,
+                child: Text("Wybierz lokalizację na mapie"),
+              ),
+              SizedBox(height: 10),
+              Text("Wspolrzedne: $selectedLocationText"),
             ],
           ),
         ),

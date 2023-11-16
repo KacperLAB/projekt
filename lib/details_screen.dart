@@ -117,14 +117,14 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
               width: 100,
               fit: BoxFit.cover,
             ),
-          if(user != null)
+          if(firebaseAuth.currentUser?.email != null)
           ElevatedButton(
             onPressed: increaseRating,
             child: Text("Zwiększ ocenę")
           )
           else
             Container(),
-          if(user != null)
+          if(firebaseAuth.currentUser?.email != null)
           ElevatedButton(
             onPressed: () {
               decreaseRating();
@@ -137,11 +137,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           )
           else
             Container(),
-          if(user != null)
+          if(firebaseAuth.currentUser?.email != null)
           TextField(controller: _commentController)
           else
             Container(),
-          if(user != null)
+          if(firebaseAuth.currentUser?.email != null)
           ElevatedButton(
             onPressed: addComment,
             child: Text("Dodaj komentarz"),
