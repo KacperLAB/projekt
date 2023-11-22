@@ -34,7 +34,7 @@ class MapScreen extends StatelessWidget {
         ),
       );
     } else {
-      // Obsługa przypadku, gdy latitude lub longitude są null
+      // gdy latitude lub longitude są null
       return Scaffold(
         appBar: AppBar(
           title: Text("Błąd"),

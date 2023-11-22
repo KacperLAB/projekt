@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_project/models/student_model.dart';
 import 'package:firebase_project/models/comment_model.dart';
+import 'package:firebase_project/models/rating_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_project/map_screen.dart';
 
 class OfferDetailsScreen extends StatefulWidget {
@@ -22,12 +22,16 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
   List<Comment> comments = [];
-  int offerRating = 0;
+  List<Rating> ratings = [];
+
+  int positiveRatings = 0;
+  int negativeRatings = 0;
 
   @override
   void initState() {
     super.initState();
     fetchComments();
+    fetchRatings();
   }
 
 
@@ -48,23 +52,106 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
         comments = commentList;
       });
     }
+  }
 
-    // Dodaj StreamBuilder do nasłuchiwania na zmiany w ocenie oferty
-    dbRef.child('Oferty/${widget.student.key}/ocena').onValue.listen((event) {
-      if (event.snapshot.value != null) {
+  void fetchRatings() {
+    dbRef.child('Oferty/${widget.student.key}/oceny').onValue.listen((event) {
+      if (event.snapshot.value != null && event.snapshot.value is Map) {
+        Map<dynamic, dynamic> ratingsData = event.snapshot.value as Map<dynamic, dynamic>;
+        List<Rating> ratingsList = [];
+        int positiveCount = 0;
+        int negativeCount = 0;
+
+        ratingsData.forEach((key, value) {
+          ratingsList.add(Rating(
+            author: value['author'],
+            rating: value['rating'],
+            timestamp: value['timestamp'],
+          ));
+
+          // Zliczanie ocen pozytywnych i negatywnych
+          if (value['rating'] == 1) {
+            positiveCount++;
+          } else if (value['rating'] == -1) {
+            negativeCount--;
+          }
+        });
+
         setState(() {
-          offerRating = (event.snapshot.value as int?) ?? 0;
+          ratings = ratingsList;
+          positiveRatings = positiveCount;
+          negativeRatings = negativeCount;
         });
       }
     });
   }
 
+  bool hasUserRated() {
+    // Sprawdź, czy użytkownik już wcześniej ocenił ofertę
+    return ratings.any((rating) => rating.author == user);
+  }
+
+  bool hasUserRatedPositive() {
+    // Sprawdź, czy użytkownik już wcześniej ocenił ofertę pozytywnie
+    return ratings.any((rating) => rating.author == user && rating.rating == 1);
+  }
+
+  bool hasUserRatedNegative() {
+    // Sprawdź, czy użytkownik już wcześniej ocenił ofertę negatywnie
+    return ratings.any((rating) => rating.author == user && rating.rating == -1);
+  }
+
   void increaseRating() {
-    dbRef.child('Oferty/${widget.student.key}/ocena').set(offerRating + 1);
+    if (!hasUserRated()) {
+      dbRef.child('Oferty/${widget.student.key}/oceny').push().set(
+        Rating(
+          author: user!,
+          rating: 1,
+          timestamp: DateTime.now().toUtc().toString(),
+        ).toJson(),
+      );
+    } else {
+      // Informacja dla użytkownika, że już wcześniej ocenił ofertę
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Już wcześniej oceniłeś tę ofertę.'),
+        ),
+      );
+    }
   }
 
   void decreaseRating() {
-    dbRef.child('Oferty/${widget.student.key}/ocena').set(offerRating - 1);
+    if (!hasUserRated()) {
+      dbRef.child('Oferty/${widget.student.key}/oceny').push().set(
+        Rating(
+          author: user!,
+          rating: -1,
+          timestamp: DateTime.now().toUtc().toString(),
+        ).toJson(),
+      );
+    } else {
+      // Informacja dla użytkownika, że już wcześniej ocenił ofertę
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Już wcześniej oceniłeś tę ofertę.'),
+        ),
+      );
+    }
+  }
+
+  ElevatedButton buildRatingButton(bool isPositive) {
+    return ElevatedButton(
+      onPressed: isPositive ? increaseRating : decreaseRating,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isPositive
+            ? hasUserRatedPositive() ? Colors.green : null
+            : hasUserRatedNegative() ? Colors.red : null,
+      ),
+      child: Icon(
+        isPositive ? Icons.add : Icons.remove,
+        color: Colors.white,
+      ),
+    );
   }
 
   void addComment() {
@@ -83,7 +170,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       _commentController.clear();
       fetchComments();
     } else {
-      // Wyświetl komunikat, że komentarz nie może być pusty
+      // Komunikat, że komentarz nie może być pusty
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Komentarz nie może być pusty.'),
       ));
@@ -105,7 +192,8 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           Text("Przecena: ${widget.student.studentData!.przecena!}%"),
           Text("Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
           Text("Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
-          Text("Ocena oferty: $offerRating"),
+          Text("Oceny pozytywne: $positiveRatings"),
+          Text("Oceny negatywne: $negativeRatings"),
           if (widget.student.studentData!.image_path != null)
             Image.network(
               widget.student.studentData!.image_path!,
@@ -121,23 +209,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
               fit: BoxFit.cover,
             ),
           if(firebaseAuth.currentUser?.email != null)
-          ElevatedButton(
-            onPressed: increaseRating,
-            child: Text("Zwiększ ocenę")
-          )
+          buildRatingButton(true)
           else
             Container(),
           if(firebaseAuth.currentUser?.email != null)
-          ElevatedButton(
-            onPressed: () {
-              decreaseRating();
-              if(offerRating<-5) {
-                dbRef.child('Oferty/${widget.student.key}').remove();
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text("Zmniejsz ocenę")
-          )
+          buildRatingButton(false)
           else
             Container(),
           ElevatedButton(

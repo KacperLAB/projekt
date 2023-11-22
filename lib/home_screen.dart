@@ -146,14 +146,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(student.studentData!.data_do!.split(' ')[0]),
               ],
             ),
-            if (student.studentData!.image_path != null)
+            if (student.studentData!.image_path != "")
               Image.network(
                 student.studentData!.image_path!,
                 height: 100,
                 width: 100,
                 fit: BoxFit.cover,
-              ),
-            if (student.studentData!.image_path == null)
+              )
+            else
               Image.asset(
                 'assets/placeholder_image.png', // Zastępcze zdjęcie
                 height: 100,

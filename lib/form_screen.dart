@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -39,18 +38,10 @@ class _FormScreenState extends State<FormScreen> {
     try {
       _currentLocation = await location.getLocation();
 
-      // Przesuń mapę do aktualnej lokalizacji
-      /*_mapController.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!),
-          15.0,
-        ),
-      );*/
       setState(() {
         _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
         selectedLocationText = "Latitude: ${_selectedLocation!.latitude}, Longitude: ${_selectedLocation!.longitude}";
       });
-
     } catch (e) {
       print("Error getting location: $e");
     }
@@ -81,13 +72,14 @@ class _FormScreenState extends State<FormScreen> {
     if (_displayedImage != null) {
       try {
         await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!);
-        imagePath = await storage.ref('images/$offerKey.jpg').getDownloadURL();
+        imagePath =
+        await storage.ref('images/$offerKey.jpg').getDownloadURL();
       } on FirebaseException catch (e) {
         print("Error uploading image: $e");
       }
     }
     if (imagePath.isEmpty)
-      return "https://firebasestorage.googleapis.com/v0/b/aplikacja-promocje-87e96.appspot.com/o/images%2Fplaceholder_image.png?alt=media&token=2b162981-1df6-4bf0-b73a-1fd294c3ed64";
+      return "";
     else
       return imagePath;
   }
@@ -153,7 +145,6 @@ class _FormScreenState extends State<FormScreen> {
         "przecena": przecena.toStringAsFixed(0),
         "data_od": selectedDate.toString(),
         "data_do": selectedDate2.toString(),
-        "ocena": 0,
         "autor_id": firebaseAuth.currentUser!.uid,
         "image_path": imagePath,
         "latitude": _selectedLocation!.latitude,
@@ -186,9 +177,7 @@ class _FormScreenState extends State<FormScreen> {
 
   Future<void> _pickLocationOnMap() async {
     // Otwórz ekran z mapą do wyboru lokalizacji
-    // Tutaj możesz użyć dowolnej biblioteki do wyboru lokalizacji na mapie
-    // Na przykład, możesz użyć pakietu `flutter_map` lub innych dostępnych na pub.dev
-    // W tym przykładzie, zakładam, że używasz Google Maps, więc korzystamy z GoogleMap
+
     await showDialog(
       context: context,
       builder: (context) {
@@ -204,8 +193,8 @@ class _FormScreenState extends State<FormScreen> {
                 });
               },
               initialCameraPosition: CameraPosition(
-                target: LatLng(0, 0),
-                zoom: 2.0,
+                target: _selectedLocation ?? LatLng(0, 0),
+                zoom: 15.0,
               ),
               onTap: (LatLng point) {
                 setState(() {
@@ -227,6 +216,12 @@ class _FormScreenState extends State<FormScreen> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
   }
 
   @override
@@ -286,10 +281,6 @@ class _FormScreenState extends State<FormScreen> {
                 height: 100,
               )
                   : Container(),
-              ElevatedButton(
-                onPressed: _getCurrentLocation,
-                child: Text("Pobierz obecną lokalizację"),
-              ),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
                 child: Text("Wybierz lokalizację na mapie"),
