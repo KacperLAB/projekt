@@ -194,14 +194,14 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           Text("Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
           Text("Oceny pozytywne: $positiveRatings"),
           Text("Oceny negatywne: $negativeRatings"),
-          if (widget.student.studentData!.image_path != null)
+          if (widget.student.studentData!.image_path != "")
             Image.network(
               widget.student.studentData!.image_path!,
               height: 100,
               width: 100,
               fit: BoxFit.cover,
-            ),
-          if (widget.student.studentData!.image_path == null)
+            )
+          else
             Image.asset(
               'assets/placeholder_image.png', // Zastępcze zdjęcie
               height: 100,
