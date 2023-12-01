@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Student> studentList = [];
   List<Student> filteredStudentList = [];
-  bool ascending=true;
+  bool ascending = true;
   bool isLoading = false;
 
   @override
@@ -50,13 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
   LocationData? _currentLocation;
   LatLng? _selectedLocation; // do filtrowania po zasiegu
 
-
-  Future<void> _getCurrentLocation() async{
+  Future<void> _getCurrentLocation() async {
     Location location = Location();
     try {
       _currentLocation = await location.getLocation();
       setState(() {
-        _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+        _selectedLocation =
+            LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
       });
       //print(_currentLocation!.latitude);
       //print(_currentLocation!.longitude);
@@ -81,6 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            if (firebaseAuth.currentUser?.email == null)
+              Container()
+            else
+              Text("Zalogowano jako: ${firebaseAuth.currentUser?.email!}"),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -93,30 +97,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Text("Sortuj"),
+              child: const Icon(Icons.sort),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserOffersScreen(),
-                  ),
-                );
-              },
-              child: const Text("Moje ogloszenia"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FollowedOffersScreen(),
-                  ),
-                );
-              },
-              child: const Text("Obserwowane ogloszenia"),
-            ),
+            if (firebaseAuth.currentUser?.email != null)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserOffersScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.folder_shared),
+              ),
+            if (firebaseAuth.currentUser?.email != null)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FollowedOffersScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.folder_special),
+              ),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -128,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Text("Filtruj"),
+              child: const Icon(Icons.filter_alt),
             ),
             ElevatedButton(
                 onPressed: () {
@@ -138,25 +144,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context) =>
                               AllMapScreen(studentList: filteredStudentList)));
                 },
-                child: const Text("Pokaz na mapie")),
-            if(isLoading)
+                child: const Icon(Icons.map_outlined)),
+            if (isLoading)
               const CircularProgressIndicator()
             else
-            for (int i = 0; i < filteredStudentList.length; i++)
-              studentWidget(filteredStudentList[i]),
+              for (int i = 0; i < filteredStudentList.length; i++)
+                studentWidget(filteredStudentList[i]),
             ElevatedButton(
                 onPressed: () {
                   studentList.clear();
                   retrieveStudentData();
                 },
-                child: const Text("Odswiez")),
+                child: const Icon(Icons.refresh)),
             if (firebaseAuth.currentUser?.email == null)
               ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => LoginScreen()));
                   },
-                  child: const Text("Logowanie i rejestracja"))
+                  child: const Icon(Icons.login))
             else
               Container(),
             if (firebaseAuth.currentUser?.email != null)
@@ -167,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       user = null;
                     });
                   },
-                  child: const Text("Wyloguj")),
+                  child: const Icon(Icons.logout)),
             ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -175,11 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 child: const Text("aktu")),
-            if (firebaseAuth.currentUser?.email == null)
-              Container()
-            else
-              Text("Zalogowano jako: ${firebaseAuth.currentUser?.email!}"),
-
           ],
         ),
       ),
@@ -189,10 +190,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _oldPriceController.text = "";
           _newPriceController.text = "";
           if (firebaseAuth.currentUser?.email != null) {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FormScreen()));
-          }
-          else {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => FormScreen()));
+          } else {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => LoginScreen()));
           }
         },
         child: const Icon(Icons.add),
@@ -206,20 +208,19 @@ class _HomeScreenState extends State<HomeScreen> {
     filteredStudentList.clear(); // Wyczyść również filteredStudentList
     final DateTime currentDate = DateTime.now();
     dbRef.child("Oferty").onChildAdded.listen((data) {
-      StudentData studentData = StudentData.fromJson(data.snapshot.value as Map);
+      StudentData studentData =
+          StudentData.fromJson(data.snapshot.value as Map);
       DateTime dataOd = DateTime.parse(studentData.data_od!);
       DateTime dataDo = DateTime.parse(studentData.data_do!);
-      if(currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
-        Student student = Student(
-            key: data.snapshot.key, studentData: studentData);
+      if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
+        Student student =
+            Student(key: data.snapshot.key, studentData: studentData);
         studentList.add(student);
         filteredStudentList.add(student); // Dodaj ofertę do filteredStudentList
         setState(() {});
+      } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
+        dbRef.child("Oferty").child(data.snapshot.key!).remove();
       }
-      else if(currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo))
-        {
-          dbRef.child("Oferty").child(data.snapshot.key!).remove();
-        }
     });
   }
 
@@ -280,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (sortBy) {
       case "nazwa":
         filteredStudentList.sort(
-                (a, b) => a.studentData!.nazwa!.compareTo(b.studentData!.nazwa!));
+            (a, b) => a.studentData!.nazwa!.compareTo(b.studentData!.nazwa!));
         break;
       case "data_od":
         filteredStudentList.sort((a, b) =>
@@ -313,7 +314,6 @@ class _HomeScreenState extends State<HomeScreen> {
     String? priceTo,
     double? maxDistance,
   }) async {
-
     setState(() {
       isLoading = true;
     });
@@ -324,8 +324,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userLocation != null) {
       filteredStudentList.addAll(studentList.where((student) {
         // Filtruj kategorie
-        bool categoryFilter =
-            categories.isEmpty || categories.contains(student.studentData!.kategoria!);
+        bool categoryFilter = categories.isEmpty ||
+            categories.contains(student.studentData!.kategoria!);
 
         // Filtruj cenę
         bool priceFilter = true;
@@ -339,7 +339,8 @@ class _HomeScreenState extends State<HomeScreen> {
         // Filtruj odległość
         bool distanceFilter = true;
         if (maxDistance != null) {
-          if (student.studentData!.latitude != null && student.studentData!.longitude != null) {
+          if (student.studentData!.latitude != null &&
+              student.studentData!.longitude != null) {
             double offerDistance = calculateDistance(
               userLocation.latitude!,
               userLocation.longitude!,
@@ -348,7 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
             );
             distanceFilter = offerDistance <= maxDistance;
           } else {
-            distanceFilter = false; // Brak współrzędnych oferty, nie uwzględniaj jej w filtrze odległości
+            distanceFilter =
+                false; // Brak współrzędnych oferty, nie uwzględniaj jej w filtrze odległości
           }
         }
 
@@ -360,22 +362,21 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = false;
     });
   }
-
 }
 
 double calculateDistance(
-    double userLatitude,
-    double userLongitude,
-    double offerLatitude,
-    double offerLongitude,
-    ) {
+  double userLatitude,
+  double userLongitude,
+  double offerLatitude,
+  double offerLongitude,
+) {
   double distanceInMeters = Geolocator.distanceBetween(
     userLatitude,
     userLongitude,
     offerLatitude,
     offerLongitude,
   );
-  // Przelicz na kilometry
+  // zamiana z metrow na kilometry
   double distanceInKilometers = distanceInMeters / 1000;
   return distanceInKilometers;
 }
@@ -390,6 +391,3 @@ Future<LocationData?> getUserLocation() async {
     return null;
   }
 }
-
-
-

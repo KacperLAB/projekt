@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     loginUser();
                     print(errorMessage);
                     Navigator.pop(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                        MaterialPageRoute(builder: (context) => const HomeScreen()));
                   }
                 },
                 child: const Text("Zaloguj")),

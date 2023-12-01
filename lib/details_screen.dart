@@ -9,6 +9,7 @@ import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 class OfferDetailsScreen extends StatefulWidget {
   final Student student;
+
   OfferDetailsScreen({required this.student});
 
   @override
@@ -35,11 +36,12 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     fetchRatings();
   }
 
-
   void fetchComments() async {
-    DataSnapshot dataSnapshot = await dbRef.child('Oferty/${widget.student.key}/komentarze').get();
+    DataSnapshot dataSnapshot =
+        await dbRef.child('Oferty/${widget.student.key}/komentarze').get();
     if (dataSnapshot.value != null && dataSnapshot.value is Map) {
-      Map<dynamic, dynamic> commentsData = dataSnapshot.value as Map<dynamic, dynamic>;
+      Map<dynamic, dynamic> commentsData =
+          dataSnapshot.value as Map<dynamic, dynamic>;
       List<Comment> commentList = [];
       commentsData.forEach((key, value) {
         commentList.add(Comment(
@@ -58,7 +60,8 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   void fetchRatings() {
     dbRef.child('Oferty/${widget.student.key}/oceny').onValue.listen((event) {
       if (event.snapshot.value != null && event.snapshot.value is Map) {
-        Map<dynamic, dynamic> ratingsData = event.snapshot.value as Map<dynamic, dynamic>;
+        Map<dynamic, dynamic> ratingsData =
+            event.snapshot.value as Map<dynamic, dynamic>;
         List<Rating> ratingsList = [];
         int positiveCount = 0;
         int negativeCount = 0;
@@ -77,7 +80,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
             negativeCount--;
           }
         });
-
 
         setState(() {
           ratings = ratingsList;
@@ -100,18 +102,19 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
 
   bool hasUserRatedNegative() {
     // Sprawdź, czy użytkownik już wcześniej ocenił ofertę negatywnie
-    return ratings.any((rating) => rating.author == user && rating.rating == -1);
+    return ratings
+        .any((rating) => rating.author == user && rating.rating == -1);
   }
 
   void increaseRating() {
     if (!hasUserRated()) {
       dbRef.child('Oferty/${widget.student.key}/oceny').push().set(
-        Rating(
-          author: user!,
-          rating: 1,
-          timestamp: DateTime.now().toUtc().toString(),
-        ).toJson(),
-      );
+            Rating(
+              author: user!,
+              rating: 1,
+              timestamp: DateTime.now().toUtc().toString(),
+            ).toJson(),
+          );
     } else {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
@@ -125,12 +128,12 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   void decreaseRating() {
     if (!hasUserRated()) {
       dbRef.child('Oferty/${widget.student.key}/oceny').push().set(
-        Rating(
-          author: user!,
-          rating: -1,
-          timestamp: DateTime.now().toUtc().toString(),
-        ).toJson(),
-      );
+            Rating(
+              author: user!,
+              rating: -1,
+              timestamp: DateTime.now().toUtc().toString(),
+            ).toJson(),
+          );
     } else {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,18 +149,23 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       onPressed: isPositive ? increaseRating : decreaseRating,
       style: ElevatedButton.styleFrom(
         backgroundColor: isPositive
-            ? hasUserRatedPositive() ? Colors.green : null
-            : hasUserRatedNegative() ? Colors.red : null,
+            ? hasUserRatedPositive()
+                ? Colors.lightGreen
+                : null
+            : hasUserRatedNegative()
+                ? Colors.red[200]
+                : null,
       ),
       child: Icon(
         isPositive ? Icons.add : Icons.remove,
-        color: Colors.white,
+        color: Colors.black,
       ),
     );
   }
 
   void addComment() {
-    String commentText = _commentController.text.trim(); // Usunięcie białych znaków z początku i końca
+    String commentText = _commentController.text
+        .trim(); // Usunięcie białych znaków z początku i końca
 
     if (commentText.isNotEmpty) {
       String timestamp = DateTime.now().toUtc().toString();
@@ -168,19 +176,25 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
         timestamp: timestamp,
       );
 
-      dbRef.child('Oferty/${widget.student.key}/komentarze').push().set(newComment.toJson());
+      dbRef
+          .child('Oferty/${widget.student.key}/komentarze')
+          .push()
+          .set(newComment.toJson());
       _commentController.clear();
       fetchComments();
     } else {
       // Komunikat, że komentarz nie może być pusty
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Komentarz nie może być pusty.'),
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Komentarz nie może być pusty.'),
       ));
     }
   }
 
   void addFollow() {
-    dbRef.child('Oferty/${widget.student.key}/obserwujacy').push().set({"uid":firebaseAuth.currentUser!.uid,"email" : user});
+    dbRef
+        .child('Oferty/${widget.student.key}/obserwujacy')
+        .push()
+        .set({"uid": firebaseAuth.currentUser!.uid, "email": user});
   }
 
   void toggleFollow() async {
@@ -191,7 +205,8 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     DatabaseReference followersRef = dbRef.child('Oferty/$offerID/obserwujacy');
 
     // Sprawdź, czy użytkownik już obserwuje ofertę
-    DatabaseEvent event = await followersRef.orderByChild('uid').equalTo(userID).once();
+    DatabaseEvent event =
+        await followersRef.orderByChild('uid').equalTo(userID).once();
     DataSnapshot snapshot = event.snapshot;
 
     Map<dynamic, dynamic>? values = snapshot.value as Map<dynamic, dynamic>?;
@@ -211,7 +226,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     }
   }
 
-  String barcode="";
+  String barcode = "";
 
   @override
   Widget build(BuildContext context) {
@@ -226,8 +241,10 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           Text("Stara cena: ${widget.student.studentData!.stara_cena!}"),
           Text("Nowa cena: ${widget.student.studentData!.nowa_cena!}"),
           Text("Przecena: ${widget.student.studentData!.przecena!}%"),
-          Text("Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
-          Text("Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
+          Text(
+              "Data od: ${widget.student.studentData!.data_od!.split(' ')[0]}"),
+          Text(
+              "Data do: ${widget.student.studentData!.data_do!.split(' ')[0]}"),
           Text("Oceny pozytywne: $positiveRatings"),
           Text("Oceny negatywne: $negativeRatings"),
           if (widget.student.studentData!.image_path != "")
@@ -244,14 +261,14 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
               width: 100,
               fit: BoxFit.cover,
             ),
-          if(firebaseAuth.currentUser?.email != null)
-          buildRatingButton(true)
-          else
-            Container(),
-          if(firebaseAuth.currentUser?.email != null)
-          buildRatingButton(false)
-          else
-            Container(),
+          if (firebaseAuth.currentUser?.email != null &&
+              widget.student.studentData!.autor_id! !=
+                  firebaseAuth.currentUser?.uid)
+            buildRatingButton(true),
+          if (firebaseAuth.currentUser?.email != null &&
+              widget.student.studentData!.autor_id! !=
+                  firebaseAuth.currentUser?.uid)
+            buildRatingButton(false),
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -261,9 +278,13 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 ),
               );
             },
-            child: const Text("Pokaż lokalizację na mapie"),
+            child: const Icon(Icons.map),
           ),
-          ElevatedButton(onPressed: toggleFollow, child: Text("Obserwuj")),
+          if (firebaseAuth.currentUser?.email != null &&
+              widget.student.studentData!.autor_id! !=
+                  firebaseAuth.currentUser?.uid)
+            ElevatedButton(
+                onPressed: toggleFollow, child: const Icon(Icons.thumb_up)),
           ElevatedButton(
             onPressed: () async {
               var res = await Navigator.push(
@@ -277,35 +298,39 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 }
               });
             },
-            child: const Text('Open Scanner'),
+            child: const Icon(Icons.barcode_reader),
           ),
-          if(barcode.isNotEmpty && barcode == widget.student.studentData!.code! && widget.student.studentData!.code!.isNotEmpty)
-            Text("Kod poprawny"),
-          if(barcode.isNotEmpty && barcode != widget.student.studentData!.code! && widget.student.studentData!.code!.isNotEmpty)
-            Text("Kod niepoprawny"),
-          if(firebaseAuth.currentUser?.email != null)
-          TextField(controller: _commentController)
+          if (barcode.isNotEmpty &&
+              barcode == widget.student.studentData!.code! &&
+              widget.student.studentData!.code!.isNotEmpty)
+            const Text("Kod poprawny"),
+          if (barcode.isNotEmpty &&
+              barcode != widget.student.studentData!.code! &&
+              widget.student.studentData!.code!.isNotEmpty)
+            const Text("Kod niepoprawny"),
+          if (firebaseAuth.currentUser?.email != null)
+            TextField(controller: _commentController)
           else
             Container(),
-          if(firebaseAuth.currentUser?.email != null)
-          ElevatedButton(
-            onPressed: addComment,
-            child: const Text("Dodaj komentarz"),
-          )
+          if (firebaseAuth.currentUser?.email != null)
+            ElevatedButton(
+              onPressed: addComment,
+              child: const Icon(Icons.add_comment),
+            )
           else
             Container(),
           const Text("Komentarze:"),
           Expanded(
             child: comments.isNotEmpty
                 ? ListView.builder(
-              itemCount: comments.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(comments[index].text),
-                  subtitle: Text("Author: ${comments[index].author}"),
-                );
-              },
-            )
+                    itemCount: comments.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(comments[index].text),
+                        subtitle: Text("Author: ${comments[index].author}"),
+                      );
+                    },
+                  )
                 : const Center(child: Text("Brak komentarzy.")),
           ),
         ],
@@ -313,5 +338,3 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     );
   }
 }
-
-

@@ -14,6 +14,7 @@ FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
   List<Student> followedOffersList = [];
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
   @override
   void initState() {
     super.initState();
@@ -46,26 +47,33 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
 
     if (currentUserID != null) {
       dbRef.child("Oferty").onChildAdded.listen((data) {
-        StudentData studentData = StudentData.fromJson(data.snapshot.value as Map);
+        StudentData studentData =
+            StudentData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(studentData.data_od!);
         DateTime dataDo = DateTime.parse(studentData.data_do!);
 
         // Sprawdź, czy obserwujący aktualnie zalogowanego użytkownika znajduje się w liście obserwujących oferty
-        dbRef.child('Oferty/${data.snapshot.key}/obserwujacy')
-            .orderByChild('uid').equalTo(currentUserID).once()
+        dbRef
+            .child('Oferty/${data.snapshot.key}/obserwujacy')
+            .orderByChild('uid')
+            .equalTo(currentUserID)
+            .once()
             .then((event) {
           DataSnapshot snapshot = event.snapshot;
-          Map<dynamic, dynamic>? followerData = snapshot.value as Map<dynamic, dynamic>?;
+          Map<dynamic, dynamic>? followerData =
+              snapshot.value as Map<dynamic, dynamic>?;
 
           if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
             // Oferta jest aktualna
             if (followerData != null && followerData.isNotEmpty) {
               // Znaleziono obserwującego, dodaj ofertę do listy
-              Student student = Student(key: data.snapshot.key, studentData: studentData);
+              Student student =
+                  Student(key: data.snapshot.key, studentData: studentData);
               followedOffersList.add(student);
               setState(() {});
             }
-          } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
+          } else if (currentDate.isAfter(dataOd) &&
+              currentDate.isAfter(dataDo)) {
             // Oferta przeterminowana, usuń z bazy danych
             dbRef.child("Oferty").child(data.snapshot.key!).remove();
           }
@@ -73,8 +81,6 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
       });
     }
   }
-
-
 
   //widget pojedynczej oferty
   Widget offerWidget(Student student) {
@@ -127,5 +133,4 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
       ),
     );
   }
-
 }

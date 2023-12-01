@@ -14,6 +14,7 @@ FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 class _UserOffersScreenState extends State<UserOffersScreen> {
   List<Student> userOffersList = [];
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
   @override
   void initState() {
     super.initState();
@@ -44,24 +45,28 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
     String? currentUserID = firebaseAuth.currentUser?.uid;
     final DateTime currentDate = DateTime.now();
     if (currentUserID != null) {
-      dbRef.child("Oferty").orderByChild("autor_id").equalTo(currentUserID).onChildAdded.listen((data) {
-        StudentData studentData = StudentData.fromJson(data.snapshot.value as Map);
+      dbRef
+          .child("Oferty")
+          .orderByChild("autor_id")
+          .equalTo(currentUserID)
+          .onChildAdded
+          .listen((data) {
+        StudentData studentData =
+            StudentData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(studentData.data_od!);
         DateTime dataDo = DateTime.parse(studentData.data_do!);
-        if((currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) || (currentDate.isBefore(dataOd) && currentDate.isBefore(dataDo))) {
-          Student student = Student(
-              key: data.snapshot.key, studentData: studentData);
+        if ((currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) ||
+            (currentDate.isBefore(dataOd) && currentDate.isBefore(dataDo))) {
+          Student student =
+              Student(key: data.snapshot.key, studentData: studentData);
           userOffersList.add(student);
           setState(() {});
+        } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
+          dbRef.child("Oferty").child(data.snapshot.key!).remove();
         }
-        else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo))
-          {
-            dbRef.child("Oferty").child(data.snapshot.key!).remove();
-          }
       });
     }
   }
-
 
   //widget pojedynczej oferty
   Widget offerWidget(Student student) {
@@ -114,5 +119,4 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
       ),
     );
   }
-
 }

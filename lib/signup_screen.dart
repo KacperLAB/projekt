@@ -10,7 +10,6 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   String? errorMessage = '';
   final TextEditingController _emailController = TextEditingController();
@@ -32,9 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Rejestracja")
-      ),
+      appBar: AppBar(title: const Text("Rejestracja")),
       body: Center(
         child: Column(
           children: [
@@ -45,24 +42,24 @@ class _SignupScreenState extends State<SignupScreen> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: "Haslo")),
-            ElevatedButton(onPressed: () {
-              if(_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Wypełnij wszystkie pola'),
-                ));
-              }
-              else {
-                createUser();
-                print(errorMessage);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()));
-              }
-            }, child: const Text("Rejestracja"))
+            ElevatedButton(
+                onPressed: () {
+                  if (_emailController.text.isEmpty ||
+                      _passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Wypełnij wszystkie pola'),
+                    ));
+                  } else {
+                    createUser();
+                    print(errorMessage);
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                  }
+                },
+                child: const Text("Rejestracja"))
           ],
         ),
       ),
     );
   }
-
-
 }

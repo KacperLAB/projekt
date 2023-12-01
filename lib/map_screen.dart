@@ -46,4 +46,3 @@ class MapScreen extends StatelessWidget {
     }
   }
 }
-

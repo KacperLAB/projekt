@@ -43,19 +43,19 @@ class _AllMapScreenState extends State<AllMapScreen> {
 
   LocationData? _currentLocation;
   LatLng? _selectedLocation;
+
   Future<void> _getCurrentLocation() async {
     Location location = Location();
     try {
       _currentLocation = await location.getLocation();
       setState(() {
-        _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+        _selectedLocation =
+            LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
       });
     } catch (e) {
       print("Error getting location: $e");
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +71,9 @@ class _AllMapScreenState extends State<AllMapScreen> {
         },
         markers: _markers,
         initialCameraPosition: CameraPosition(
-          target: LatLng(_selectedLocation!.latitude, _selectedLocation!.longitude), // Początkowe współrzędne mapy
+          target:
+              LatLng(_selectedLocation!.latitude, _selectedLocation!.longitude),
+          // Początkowe współrzędne mapy
           zoom: 10,
         ),
       ),

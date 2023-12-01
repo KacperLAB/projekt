@@ -9,7 +9,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
-
 class FormScreen extends StatefulWidget {
   FormScreen({super.key});
 
@@ -30,7 +29,7 @@ class _FormScreenState extends State<FormScreen> {
   FirebaseStorage storage = FirebaseStorage.instance;
 
   File? _displayedImage;
-  String barcode="";
+  String barcode = "";
 
   late GoogleMapController _mapController;
   LocationData? _currentLocation;
@@ -42,8 +41,10 @@ class _FormScreenState extends State<FormScreen> {
       _currentLocation = await location.getLocation();
 
       setState(() {
-        _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
-        selectedLocationText = "Latitude: ${_selectedLocation!.latitude}, Longitude: ${_selectedLocation!.longitude}";
+        _selectedLocation =
+            LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+        selectedLocationText =
+            "Latitude: ${_selectedLocation!.latitude}, Longitude: ${_selectedLocation!.longitude}";
       });
     } catch (e) {
       print("Error getting location: $e");
@@ -52,7 +53,7 @@ class _FormScreenState extends State<FormScreen> {
 
   Future<void> _pickImageFromGallery() async {
     XFile? pickedImage =
-    await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       setState(() {
         _displayedImage = File(pickedImage.path);
@@ -62,7 +63,7 @@ class _FormScreenState extends State<FormScreen> {
 
   Future<void> _pickImageFromCamera() async {
     XFile? pickedImage =
-    await ImagePicker().pickImage(source: ImageSource.camera);
+        await ImagePicker().pickImage(source: ImageSource.camera);
     if (pickedImage != null) {
       setState(() {
         _displayedImage = File(pickedImage.path);
@@ -70,23 +71,19 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
-
-
   Future<String> _uploadImage(String offerKey) async {
     String imagePath = "";
     if (_displayedImage != null) {
       try {
         await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!);
-        imagePath =
-        await storage.ref('images/$offerKey.jpg').getDownloadURL();
+        imagePath = await storage.ref('images/$offerKey.jpg').getDownloadURL();
       } on FirebaseException catch (e) {
         print("Error uploading image: $e");
       }
     }
     if (imagePath.isEmpty) {
       return "";
-    }
-    else {
+    } else {
       return imagePath;
     }
   }
@@ -207,7 +204,8 @@ class _FormScreenState extends State<FormScreen> {
               onTap: (LatLng point) {
                 setState(() {
                   _selectedLocation = point;
-                  selectedLocationText = "Latitude: ${point.latitude}, Longitude: ${point.longitude}";
+                  selectedLocationText =
+                      "Latitude: ${point.latitude}, Longitude: ${point.longitude}";
                 });
                 Navigator.of(context).pop();
               },
@@ -232,7 +230,6 @@ class _FormScreenState extends State<FormScreen> {
     _getCurrentLocation();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,12 +247,14 @@ class _FormScreenState extends State<FormScreen> {
                 decoration: const InputDecoration(labelText: "Nazwa"),
               ),
               TextField(
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 controller: _oldPriceController,
                 decoration: const InputDecoration(labelText: "Stara cena"),
               ),
               TextField(
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 controller: _newPriceController,
                 decoration: const InputDecoration(labelText: "Nowa cena"),
               ),
@@ -264,13 +263,13 @@ class _FormScreenState extends State<FormScreen> {
               Text("ts_int: $ts"),
               ElevatedButton(
                 onPressed: () => _selectDate(context),
-                child: const Text('Data od'),
+                child: const Icon(Icons.edit_calendar),
               ),
               Text("${selectedDate2.toLocal()}".split(' ')[0]),
               Text("ts2_int: $ts2"),
               ElevatedButton(
                 onPressed: () => _selectDate2(context),
-                child: const Text('Data do'),
+                child: const Icon(Icons.edit_calendar),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -285,30 +284,30 @@ class _FormScreenState extends State<FormScreen> {
                     }
                   });
                 },
-                child: const Text('Open Scanner'),
+                child: const Icon(Icons.barcode_reader),
               ),
               Text("wynik skanowania: $barcode"),
               ElevatedButton(
                 onPressed: _addOffer,
-                child: const Text("Dodaj ogłoszenie"),
+                child: const Icon(Icons.add),
               ),
               ElevatedButton(
                 onPressed: _pickImageFromGallery,
-                child: const Text("Wybierz obraz z galerii"),
+                child: const Icon(Icons.photo_album),
               ),
               ElevatedButton(
                 onPressed: _pickImageFromCamera,
-                child: const Text("Zrób zdjęcie"),
+                child: const Icon(Icons.photo_camera),
               ),
               _displayedImage != null
                   ? Image.file(
-                _displayedImage!,
-                height: 100,
-              )
+                      _displayedImage!,
+                      height: 100,
+                    )
                   : Container(),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
-                child: const Text("Wybierz lokalizację na mapie"),
+                child: const Icon(Icons.pin_drop),
               ),
               const SizedBox(height: 10),
               Text("Wspolrzedne: $selectedLocationText"),

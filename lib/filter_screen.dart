@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class FilterScreen extends StatefulWidget {
   final Function({
-  List<String> categories,
-  String? priceFrom,
-  String? priceTo,
-  double? maxDistance,
+    List<String> categories,
+    String? priceFrom,
+    String? priceTo,
+    double? maxDistance,
   }) applyFilter;
 
   const FilterScreen({Key? key, required this.applyFilter}) : super(key: key);
@@ -21,7 +21,14 @@ class _FilterScreenState extends State<FilterScreen> {
   double? maxDistance;
 
   // Lista dostępnych kategorii
-  final List<String> allCategories = ["Owoce", "Warzywa", "Mięso", "Nabiał", "Napoje", "Inne"];
+  final List<String> allCategories = [
+    "Owoce",
+    "Warzywa",
+    "Mięso",
+    "Nabiał",
+    "Napoje",
+    "Inne"
+  ];
 
   TextEditingController priceFromController = TextEditingController();
   TextEditingController priceToController = TextEditingController();
@@ -121,7 +128,8 @@ class _FilterScreenState extends State<FilterScreen> {
               onChanged: (value) {
                 maxDistance = value.isNotEmpty ? double.parse(value) : null;
               },
-              decoration: const InputDecoration(labelText: "Maksymalna odległość (km)"),
+              decoration:
+                  const InputDecoration(labelText: "Maksymalna odległość (km)"),
             ),
           ),
         ],
@@ -129,6 +137,3 @@ class _FilterScreenState extends State<FilterScreen> {
     );
   }
 }
-
-
-
