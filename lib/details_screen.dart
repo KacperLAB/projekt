@@ -5,6 +5,7 @@ import 'package:firebase_project/models/rating_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_project/map_screen.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 class OfferDetailsScreen extends StatefulWidget {
   final Student student;
@@ -77,6 +78,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           }
         });
 
+
         setState(() {
           ratings = ratingsList;
           positiveRatings = positiveCount;
@@ -113,7 +115,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     } else {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Już wcześniej oceniłeś tę ofertę.'),
         ),
       );
@@ -132,7 +134,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     } else {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Już wcześniej oceniłeś tę ofertę.'),
         ),
       );
@@ -171,11 +173,45 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       fetchComments();
     } else {
       // Komunikat, że komentarz nie może być pusty
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Komentarz nie może być pusty.'),
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Komentarz nie może być pusty.'),
       ));
     }
   }
+
+  void addFollow() {
+    dbRef.child('Oferty/${widget.student.key}/obserwujacy').push().set({"uid":firebaseAuth.currentUser!.uid,"email" : user});
+  }
+
+  void toggleFollow() async {
+    String userID = firebaseAuth.currentUser?.uid ?? '';
+    String? offerID = widget.student.key;
+
+    // Pobierz referencję do danych obserwujących dla danej oferty
+    DatabaseReference followersRef = dbRef.child('Oferty/$offerID/obserwujacy');
+
+    // Sprawdź, czy użytkownik już obserwuje ofertę
+    DatabaseEvent event = await followersRef.orderByChild('uid').equalTo(userID).once();
+    DataSnapshot snapshot = event.snapshot;
+
+    Map<dynamic, dynamic>? values = snapshot.value as Map<dynamic, dynamic>?;
+
+    if (values == null || values.isEmpty) {
+      // Jeśli użytkownik nie obserwuje oferty, dodaj go do listy obserwujących
+      DatabaseReference newFollowerRef = followersRef.push();
+      newFollowerRef.set({
+        "uid": userID,
+        "email": user, // Zakładając, że 'user' jest zdefiniowane wcześniej
+      });
+    } else {
+      // Jeśli użytkownik już obserwuje ofertę, usuń go z listy obserwujących
+      values.forEach((key, value) {
+        dbRef.child('Oferty/$offerID/obserwujacy/$key').remove();
+      });
+    }
+  }
+
+  String barcode="";
 
   @override
   Widget build(BuildContext context) {
@@ -225,8 +261,28 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 ),
               );
             },
-            child: Text("Pokaż lokalizację na mapie"),
+            child: const Text("Pokaż lokalizację na mapie"),
           ),
+          ElevatedButton(onPressed: toggleFollow, child: Text("Obserwuj")),
+          ElevatedButton(
+            onPressed: () async {
+              var res = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SimpleBarcodeScannerPage(),
+                  ));
+              setState(() {
+                if (res is String) {
+                  barcode = res;
+                }
+              });
+            },
+            child: const Text('Open Scanner'),
+          ),
+          if(barcode.isNotEmpty && barcode == widget.student.studentData!.code! && widget.student.studentData!.code!.isNotEmpty)
+            Text("Kod poprawny"),
+          if(barcode.isNotEmpty && barcode != widget.student.studentData!.code! && widget.student.studentData!.code!.isNotEmpty)
+            Text("Kod niepoprawny"),
           if(firebaseAuth.currentUser?.email != null)
           TextField(controller: _commentController)
           else
@@ -234,11 +290,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           if(firebaseAuth.currentUser?.email != null)
           ElevatedButton(
             onPressed: addComment,
-            child: Text("Dodaj komentarz"),
+            child: const Text("Dodaj komentarz"),
           )
           else
             Container(),
-          Text("Komentarze:"),
+          const Text("Komentarze:"),
           Expanded(
             child: comments.isNotEmpty
                 ? ListView.builder(
@@ -250,7 +306,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 );
               },
             )
-                : Center(child: Text("Brak komentarzy.")),
+                : const Center(child: Text("Brak komentarzy.")),
           ),
         ],
       ),

@@ -45,10 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: const InputDecoration(labelText: "Haslo")),
             ElevatedButton(
                 onPressed: () {
-                  if(_emailController.text.isEmpty || _passwordController.text.isEmpty)
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Wypełnij wszystkie pola'),
+                  if(_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wypełnij wszystkie pola'),
                     ));
+                  }
                   else {
                     loginUser();
                     print(errorMessage);
@@ -56,13 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(builder: (context) => HomeScreen()));
                   }
                 },
-                child: Text("Zaloguj")),
+                child: const Text("Zaloguj")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.push(context,
                       MaterialPageRoute(builder: (context) => SignupScreen()));
                 },
-                child: Text("Rejestracja"))
+                child: const Text("Rejestracja"))
           ],
         ),
       ),

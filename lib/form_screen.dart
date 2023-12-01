@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:list_picker/list_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+
 
 class FormScreen extends StatefulWidget {
   FormScreen({super.key});
@@ -28,6 +30,7 @@ class _FormScreenState extends State<FormScreen> {
   FirebaseStorage storage = FirebaseStorage.instance;
 
   File? _displayedImage;
+  String barcode="";
 
   late GoogleMapController _mapController;
   LocationData? _currentLocation;
@@ -67,6 +70,8 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+
+
   Future<String> _uploadImage(String offerKey) async {
     String imagePath = "";
     if (_displayedImage != null) {
@@ -78,10 +83,12 @@ class _FormScreenState extends State<FormScreen> {
         print("Error uploading image: $e");
       }
     }
-    if (imagePath.isEmpty)
+    if (imagePath.isEmpty) {
       return "";
-    else
+    }
+    else {
       return imagePath;
+    }
   }
 
   final TextEditingController _nameController = TextEditingController();
@@ -149,6 +156,7 @@ class _FormScreenState extends State<FormScreen> {
         "image_path": imagePath,
         "latitude": _selectedLocation!.latitude,
         "longitude": _selectedLocation!.longitude,
+        "code": barcode
       };
 
       // Zapisz ofertę w bazie danych
@@ -161,12 +169,12 @@ class _FormScreenState extends State<FormScreen> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("Błąd"),
-            content: Text("Proszę wybrać daty"),
+            title: const Text("Błąd"),
+            content: const Text("Proszę wybrać daty"),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text("OK"),
+                child: const Text("OK"),
               ),
             ],
           );
@@ -182,7 +190,7 @@ class _FormScreenState extends State<FormScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Wybierz lokalizację na mapie'),
+          title: const Text('Wybierz lokalizację na mapie'),
           content: SizedBox(
             height: 300,
             width: 300,
@@ -193,7 +201,7 @@ class _FormScreenState extends State<FormScreen> {
                 });
               },
               initialCameraPosition: CameraPosition(
-                target: _selectedLocation ?? LatLng(0, 0),
+                target: _selectedLocation ?? const LatLng(0, 0),
                 zoom: 15.0,
               ),
               onTap: (LatLng point) {
@@ -210,7 +218,7 @@ class _FormScreenState extends State<FormScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Anuluj'),
+              child: const Text('Anuluj'),
             ),
           ],
         );
@@ -223,6 +231,7 @@ class _FormScreenState extends State<FormScreen> {
     super.initState();
     _getCurrentLocation();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -241,39 +250,55 @@ class _FormScreenState extends State<FormScreen> {
                 decoration: const InputDecoration(labelText: "Nazwa"),
               ),
               TextField(
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 controller: _oldPriceController,
                 decoration: const InputDecoration(labelText: "Stara cena"),
               ),
               TextField(
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 controller: _newPriceController,
                 decoration: const InputDecoration(labelText: "Nowa cena"),
               ),
               listPickerField,
               Text("${selectedDate.toLocal()}".split(' ')[0]),
-              Text("ts_int:" + "${ts}"),
+              Text("ts_int: $ts"),
               ElevatedButton(
                 onPressed: () => _selectDate(context),
                 child: const Text('Data od'),
               ),
               Text("${selectedDate2.toLocal()}".split(' ')[0]),
-              Text("ts2_int" + "${ts2}"),
+              Text("ts2_int: $ts2"),
               ElevatedButton(
                 onPressed: () => _selectDate2(context),
                 child: const Text('Data do'),
               ),
               ElevatedButton(
+                onPressed: () async {
+                  var res = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SimpleBarcodeScannerPage(),
+                      ));
+                  setState(() {
+                    if (res is String) {
+                      barcode = res;
+                    }
+                  });
+                },
+                child: const Text('Open Scanner'),
+              ),
+              Text("wynik skanowania: $barcode"),
+              ElevatedButton(
                 onPressed: _addOffer,
-                child: Text("Dodaj ogłoszenie"),
+                child: const Text("Dodaj ogłoszenie"),
               ),
               ElevatedButton(
                 onPressed: _pickImageFromGallery,
-                child: Text("Wybierz obraz z galerii"),
+                child: const Text("Wybierz obraz z galerii"),
               ),
               ElevatedButton(
                 onPressed: _pickImageFromCamera,
-                child: Text("Zrób zdjęcie"),
+                child: const Text("Zrób zdjęcie"),
               ),
               _displayedImage != null
                   ? Image.file(
@@ -283,9 +308,9 @@ class _FormScreenState extends State<FormScreen> {
                   : Container(),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
-                child: Text("Wybierz lokalizację na mapie"),
+                child: const Text("Wybierz lokalizację na mapie"),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text("Wspolrzedne: $selectedLocationText"),
             ],
           ),

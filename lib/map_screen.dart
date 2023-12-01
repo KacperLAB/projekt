@@ -15,7 +15,7 @@ class MapScreen extends StatelessWidget {
     if (latitude != null && longitude != null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Lokalizacja oferty"),
+          title: const Text("Lokalizacja oferty"),
         ),
         body: GoogleMap(
           initialCameraPosition: CameraPosition(
@@ -37,9 +37,9 @@ class MapScreen extends StatelessWidget {
       // gdy latitude lub longitude są null
       return Scaffold(
         appBar: AppBar(
-          title: Text("Błąd"),
+          title: const Text("Błąd"),
         ),
-        body: Center(
+        body: const Center(
           child: Text("Brak dostępnych danych o lokalizacji."),
         ),
       );

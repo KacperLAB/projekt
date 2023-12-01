@@ -2,11 +2,18 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_project/all_map_screen.dart';
 import 'package:firebase_project/form_screen.dart';
 import 'package:firebase_project/models/student_model.dart';
+import 'package:firebase_project/user_offers_screen.dart';
+import 'package:firebase_project/followed_offers_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:list_picker/list_picker.dart';
 import 'package:firebase_project/details_screen.dart';
 import 'package:firebase_project/login_screen.dart';
+import 'package:firebase_project/sort_screen.dart';
+import 'package:firebase_project/filter_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:location/location.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +26,7 @@ FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _HomeScreenState extends State<HomeScreen> {
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
   //String _sortBy = "data_od"; // Domyślne sortowanie
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _oldPriceController = TextEditingController();
@@ -27,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Student> studentList = [];
   List<Student> filteredStudentList = [];
+  bool ascending=true;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -34,6 +44,27 @@ class _HomeScreenState extends State<HomeScreen> {
     retrieveStudentData();
     user = firebaseAuth.currentUser?.email;
     filteredStudentList.addAll(studentList);
+    _getCurrentLocation();
+  }
+
+  LocationData? _currentLocation;
+  LatLng? _selectedLocation; // do filtrowania po zasiegu
+
+
+  Future<void> _getCurrentLocation() async{
+    Location location = Location();
+    try {
+      _currentLocation = await location.getLocation();
+      setState(() {
+        _selectedLocation = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+      });
+      //print(_currentLocation!.latitude);
+      //print(_currentLocation!.longitude);
+      //print(_selectedLocation!.latitude);
+      //print(_selectedLocation!.longitude);
+    } catch (e) {
+      print("Error getting location: $e");
+    }
   }
 
   final listPickerField = ListPickerField(
@@ -62,7 +93,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: Text("Sortuj"),
+              child: const Text("Sortuj"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserOffersScreen(),
+                  ),
+                );
+              },
+              child: const Text("Moje ogloszenia"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FollowedOffersScreen(),
+                  ),
+                );
+              },
+              child: const Text("Obserwowane ogloszenia"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -75,8 +128,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: Text("Filtruj"),
+              child: const Text("Filtruj"),
             ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              AllMapScreen(studentList: filteredStudentList)));
+                },
+                child: const Text("Pokaz na mapie")),
+            if(isLoading)
+              const CircularProgressIndicator()
+            else
             for (int i = 0; i < filteredStudentList.length; i++)
               studentWidget(filteredStudentList[i]),
             ElevatedButton(
@@ -84,14 +149,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   studentList.clear();
                   retrieveStudentData();
                 },
-                child: Text("Odswiez")),
-            if(firebaseAuth.currentUser?.email == null)
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()));
-                },
-                child: Text("Logowanie i rejestracja"))
+                child: const Text("Odswiez")),
+            if (firebaseAuth.currentUser?.email == null)
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()));
+                  },
+                  child: const Text("Logowanie i rejestracja"))
             else
               Container(),
             if (firebaseAuth.currentUser?.email != null)
@@ -102,21 +167,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       user = null;
                     });
                   },
-                  child: Text("Wyloguj")),
+                  child: const Text("Wyloguj")),
             ElevatedButton(
                 onPressed: () {
                   setState(() {
                     user = firebaseAuth.currentUser?.email;
                   });
                 },
-                child: Text("aktu")),
+                child: const Text("aktu")),
             if (firebaseAuth.currentUser?.email == null)
               Container()
             else
               Text("Zalogowano jako: ${firebaseAuth.currentUser?.email!}"),
-            ElevatedButton(onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => AllMapScreen(studentList: studentList)));
-            }, child: Text("Pokaz na mapie"))
+
           ],
         ),
       ),
@@ -125,12 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _nameController.text = "";
           _oldPriceController.text = "";
           _newPriceController.text = "";
-          if (firebaseAuth.currentUser?.email != null)
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => FormScreen()));
-          else
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => LoginScreen()));
+          if (firebaseAuth.currentUser?.email != null) {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => FormScreen()));
+          }
+          else {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+          }
         },
         child: const Icon(Icons.add),
       ),
@@ -140,11 +203,23 @@ class _HomeScreenState extends State<HomeScreen> {
   //wczytywanie ofert z bazy
   void retrieveStudentData() {
     studentList.clear();
+    filteredStudentList.clear(); // Wyczyść również filteredStudentList
+    final DateTime currentDate = DateTime.now();
     dbRef.child("Oferty").onChildAdded.listen((data) {
       StudentData studentData = StudentData.fromJson(data.snapshot.value as Map);
-      Student student = Student(key: data.snapshot.key, studentData: studentData);
-      studentList.add(student);
-      setState(() {});
+      DateTime dataOd = DateTime.parse(studentData.data_od!);
+      DateTime dataDo = DateTime.parse(studentData.data_do!);
+      if(currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
+        Student student = Student(
+            key: data.snapshot.key, studentData: studentData);
+        studentList.add(student);
+        filteredStudentList.add(student); // Dodaj ofertę do filteredStudentList
+        setState(() {});
+      }
+      else if(currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo))
+        {
+          dbRef.child("Oferty").child(data.snapshot.key!).remove();
+        }
     });
   }
 
@@ -175,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(student.studentData!.kategoria!),
                 Text(student.studentData!.stara_cena!),
                 Text(student.studentData!.nowa_cena!),
-                Text(student.studentData!.przecena! + "%"),
+                Text("${student.studentData!.przecena!}%"),
                 Text(student.studentData!.data_od!.split(' ')[0]),
                 Text(student.studentData!.data_do!.split(' ')[0]),
               ],
@@ -201,122 +276,120 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Funkcja sortująca oferty
-  void sortStudentList(String sortBy) {
+  void sortStudentList(String sortBy, bool ascending) {
     switch (sortBy) {
       case "nazwa":
-        filteredStudentList.sort((a, b) => a.studentData!.nazwa!.compareTo(b.studentData!.nazwa!));
+        filteredStudentList.sort(
+                (a, b) => a.studentData!.nazwa!.compareTo(b.studentData!.nazwa!));
         break;
       case "data_od":
-        filteredStudentList.sort((a, b) => DateTime.parse(a.studentData!.data_od!).compareTo(DateTime.parse(b.studentData!.data_od!)));
+        filteredStudentList.sort((a, b) =>
+            DateTime.parse(a.studentData!.data_od!)
+                .compareTo(DateTime.parse(b.studentData!.data_od!)));
         break;
       case "przecena":
-        filteredStudentList.sort((a, b) => int.parse(a.studentData!.przecena!).compareTo(int.parse(b.studentData!.przecena!)));
+        filteredStudentList.sort((a, b) => int.parse(a.studentData!.przecena!)
+            .compareTo(int.parse(b.studentData!.przecena!)));
+        break;
+      case "cena":
+        filteredStudentList.sort((a, b) => int.parse(a.studentData!.nowa_cena!)
+            .compareTo(int.parse(b.studentData!.nowa_cena!)));
         break;
       default:
         break;
     }
-    setState(() {});
-  }
 
-  // Funkcja filtrująca oferty
-  void applyFilter(String category) {
-    filteredStudentList.clear();
-    if (category == "Wszystkie") {
-      filteredStudentList.addAll(studentList);
-    } else {
-      filteredStudentList.addAll(studentList.where((student) => student.studentData!.kategoria == category));
+    if (!ascending) {
+      filteredStudentList = filteredStudentList.reversed.toList();
     }
+
     setState(() {});
   }
 
+  //Funkcja filtrujaca
+  void applyFilter({
+    List<String> categories = const [],
+    String? priceFrom,
+    String? priceTo,
+    double? maxDistance,
+  }) async {
+
+    setState(() {
+      isLoading = true;
+    });
+
+    filteredStudentList.clear();
+    LocationData? userLocation = await getUserLocation();
+
+    if (userLocation != null) {
+      filteredStudentList.addAll(studentList.where((student) {
+        // Filtruj kategorie
+        bool categoryFilter =
+            categories.isEmpty || categories.contains(student.studentData!.kategoria!);
+
+        // Filtruj cenę
+        bool priceFilter = true;
+        if (priceFrom != null && priceTo != null) {
+          int studentPrice = int.parse(student.studentData!.nowa_cena ?? "0");
+          int from = int.parse(priceFrom);
+          int to = int.parse(priceTo);
+          priceFilter = studentPrice >= from && studentPrice <= to;
+        }
+
+        // Filtruj odległość
+        bool distanceFilter = true;
+        if (maxDistance != null) {
+          if (student.studentData!.latitude != null && student.studentData!.longitude != null) {
+            double offerDistance = calculateDistance(
+              userLocation.latitude!,
+              userLocation.longitude!,
+              student.studentData!.latitude!,
+              student.studentData!.longitude!,
+            );
+            distanceFilter = offerDistance <= maxDistance;
+          } else {
+            distanceFilter = false; // Brak współrzędnych oferty, nie uwzględniaj jej w filtrze odległości
+          }
+        }
+
+        return categoryFilter && priceFilter && distanceFilter;
+      }));
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
 
 }
 
-class SortScreen extends StatelessWidget {
-  final List<Student> studentList;
-  final Function(String) sortStudentList;
+double calculateDistance(
+    double userLatitude,
+    double userLongitude,
+    double offerLatitude,
+    double offerLongitude,
+    ) {
+  double distanceInMeters = Geolocator.distanceBetween(
+    userLatitude,
+    userLongitude,
+    offerLatitude,
+    offerLongitude,
+  );
+  // Przelicz na kilometry
+  double distanceInKilometers = distanceInMeters / 1000;
+  return distanceInKilometers;
+}
 
-  const SortScreen({Key? key, required this.studentList, required this.sortStudentList}) : super(key: key);
+Future<LocationData?> getUserLocation() async {
+  Location location = Location();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Sortuj oferty"),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("nazwa");
-              Navigator.pop(context);
-            },
-            child: Text("Sortuj po nazwie"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("data_od");
-              Navigator.pop(context);
-            },
-            child: Text("Sortuj po dacie rozpoczęcia"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("przecena");
-              Navigator.pop(context);
-            },
-            child: Text("Sortuj po przecenie"),
-          ),
-        ],
-      ),
-    );
+  try {
+    return await location.getLocation();
+  } catch (e) {
+    print("Error getting location: $e");
+    return null;
   }
 }
 
-class FilterScreen extends StatelessWidget {
-  final Function(String) applyFilter;
 
-  const FilterScreen({Key? key, required this.applyFilter}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Filtruj oferty"),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              applyFilter("Wszystkie");
-              Navigator.pop(context);
-            },
-            child: Text("Wszystkie"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              applyFilter("Owoce");
-              Navigator.pop(context);
-            },
-            child: Text("Owoce"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              applyFilter("Warzywa");
-              Navigator.pop(context);
-            },
-            child: Text("Warzywa"),
-          ),
-          ElevatedButton(onPressed: () {
-            applyFilter("Inne");
-          }, child: Text("Inne"))
-
-          // Dodaj inne kategorie
-        ],
-      ),
-    );
-  }
-}
 

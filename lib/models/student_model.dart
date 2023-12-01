@@ -17,6 +17,7 @@ class StudentData {
   String? image_path;
   double? latitude;
   double? longitude;
+  String? code;
 
   StudentData({
     this.nazwa,
@@ -29,6 +30,8 @@ class StudentData {
     this.image_path,
     this.latitude,
     this.longitude,
+    this.code,
+
   });
 
   StudentData.fromJson(Map<dynamic, dynamic>? json) {
@@ -43,6 +46,7 @@ class StudentData {
       image_path = json["image_path"];
       latitude = json["latitude"] is double ? json["latitude"] : null;
       longitude = json["longitude"] is double ? json["longitude"] : null;
+      code = json["code"];
     }
   }
 }
