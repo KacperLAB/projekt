@@ -18,14 +18,17 @@ import 'package:geolocator/geolocator.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
 
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _HomeScreenState extends State<HomeScreen> {
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
 
   //String _sortBy = "data_od"; // Domyślne sortowanie
   final TextEditingController _nameController = TextEditingController();
@@ -97,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Icon(Icons.sort),
+              child: const Text("Sortuj"),
             ),
             if (firebaseAuth.currentUser?.email != null)
               ElevatedButton(
@@ -109,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                child: const Icon(Icons.folder_shared),
+                child: const Text("Moje ogloszenia"),
               ),
             if (firebaseAuth.currentUser?.email != null)
               ElevatedButton(
@@ -121,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                child: const Icon(Icons.folder_special),
+                child: const Text("Obserwowane"),
               ),
             ElevatedButton(
               onPressed: () {
@@ -134,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Icon(Icons.filter_alt),
+              child: const Text("Filtruj"),
             ),
             ElevatedButton(
                 onPressed: () {
@@ -144,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context) =>
                               AllMapScreen(studentList: filteredStudentList)));
                 },
-                child: const Icon(Icons.map_outlined)),
+                child: const Text("Pokaz na mapie")),
             if (isLoading)
               const CircularProgressIndicator()
             else
@@ -160,9 +163,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()));
+                        MaterialPageRoute(builder: (context) => LoginScreen(),
+                        )
+                    );
                   },
-                  child: const Icon(Icons.login))
+                  child: const Text("Logowanie"))
+
             else
               Container(),
             if (firebaseAuth.currentUser?.email != null)
@@ -173,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       user = null;
                     });
                   },
-                  child: const Icon(Icons.logout)),
+                  child: const Text("Wyloguj")),
             ElevatedButton(
                 onPressed: () {
                   setState(() {

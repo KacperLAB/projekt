@@ -65,6 +65,8 @@ class DefaultFirebaseOptions {
     projectId: 'aplikacja-promocje-87e96',
     databaseURL: 'https://aplikacja-promocje-87e96-default-rtdb.firebaseio.com',
     storageBucket: 'aplikacja-promocje-87e96.appspot.com',
+    androidClientId: '585508054843-4vrsaukq5uohlhsn55stm5if8fjjd3e2.apps.googleusercontent.com',
+    iosClientId: '585508054843-ju2smb0ohti9akslgl2st70oaunsq1bp.apps.googleusercontent.com',
     iosBundleId: 'com.example.firebaseProject',
   );
 }

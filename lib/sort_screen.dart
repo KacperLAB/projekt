@@ -15,67 +15,69 @@ class SortScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Sortuj oferty"),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("nazwa", true);
-              Navigator.pop(context);
-            },
-            child: const Text("Sortuj po nazwie A-Z"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("nazwa", false);
-              Navigator.pop(context);
-            },
-            child: const Text("Sortuj po nazwie Z-A"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("data_od", true);
-              Navigator.pop(context);
-            },
-            child: const Text("Dodane najpozniej"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("data_od", false);
-              Navigator.pop(context);
-            },
-            child: const Text("Dodane najwczesniej"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("przecena", false);
-              Navigator.pop(context);
-            },
-            child: const Text("Przecena malejąco"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("przecena", true);
-              Navigator.pop(context);
-            },
-            child: const Text("Przecena rosnąco"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("cena", true);
-              Navigator.pop(context);
-            },
-            child: const Text("Cena rosnąco"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              sortStudentList("cena", false);
-              Navigator.pop(context);
-            },
-            child: const Text("Cena malejąco"),
-          ),
-        ],
-      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("nazwa", true);
+                Navigator.pop(context);
+              },
+              child: const Text("Sortuj po nazwie A-Z"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("nazwa", false);
+                Navigator.pop(context);
+              },
+              child: const Text("Sortuj po nazwie Z-A"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("data_od", true);
+                Navigator.pop(context);
+              },
+              child: const Text("Dodane najpozniej"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("data_od", false);
+                Navigator.pop(context);
+              },
+              child: const Text("Dodane najwczesniej"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("przecena", false);
+                Navigator.pop(context);
+              },
+              child: const Text("Przecena malejąco"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("przecena", true);
+                Navigator.pop(context);
+              },
+              child: const Text("Przecena rosnąco"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("cena", true);
+                Navigator.pop(context);
+              },
+              child: const Text("Cena rosnąco"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sortStudentList("cena", false);
+                Navigator.pop(context);
+              },
+              child: const Text("Cena malejąco"),
+            ),
+          ],
+        ),
+      )
     );
   }
 }

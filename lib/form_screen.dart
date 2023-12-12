@@ -260,16 +260,16 @@ class _FormScreenState extends State<FormScreen> {
               ),
               listPickerField,
               Text("${selectedDate.toLocal()}".split(' ')[0]),
-              Text("ts_int: $ts"),
+              //Text("ts_int: $ts"),
               ElevatedButton(
                 onPressed: () => _selectDate(context),
-                child: const Icon(Icons.edit_calendar),
+                child: const Text("Data od"),
               ),
               Text("${selectedDate2.toLocal()}".split(' ')[0]),
-              Text("ts2_int: $ts2"),
+              //Text("ts2_int: $ts2"),
               ElevatedButton(
                 onPressed: () => _selectDate2(context),
-                child: const Icon(Icons.edit_calendar),
+                child: const Text("Data do"),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -284,20 +284,16 @@ class _FormScreenState extends State<FormScreen> {
                     }
                   });
                 },
-                child: const Icon(Icons.barcode_reader),
+                child: const Text("Skanuj kod"),
               ),
               Text("wynik skanowania: $barcode"),
               ElevatedButton(
-                onPressed: _addOffer,
-                child: const Icon(Icons.add),
-              ),
-              ElevatedButton(
                 onPressed: _pickImageFromGallery,
-                child: const Icon(Icons.photo_album),
+                child: const Text("Dodaj zdjecie z galeri"),
               ),
               ElevatedButton(
                 onPressed: _pickImageFromCamera,
-                child: const Icon(Icons.photo_camera),
+                child: const Text("Zrob zdjecie"),
               ),
               _displayedImage != null
                   ? Image.file(
@@ -307,10 +303,14 @@ class _FormScreenState extends State<FormScreen> {
                   : Container(),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
-                child: const Icon(Icons.pin_drop),
+                child: const Text("Wybierz lokalizacje"),
               ),
-              const SizedBox(height: 10),
-              Text("Wspolrzedne: $selectedLocationText"),
+              ElevatedButton(
+                onPressed: _addOffer,
+                child: const Icon(Icons.add),
+              ),
+              //const SizedBox(height: 10),
+              //Text("Wspolrzedne: $selectedLocationText"),
             ],
           ),
         ),

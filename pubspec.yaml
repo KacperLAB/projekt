@@ -45,6 +45,9 @@ dependencies:
   location: ^5.0.3
   geolocator: ^7.0.3
   simple_barcode_scanner: ^0.0.8
+  firebase_ui_auth: ^1.10.0
+  firebase_ui_oauth_google: ^1.2.14
+  google_sign_in: ^6.1.6
 
 dev_dependencies:
   flutter_test:

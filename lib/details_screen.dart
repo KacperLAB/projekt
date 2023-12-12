@@ -278,13 +278,13 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 ),
               );
             },
-            child: const Icon(Icons.map),
+            child: const Text("Pokaż na mapie"),
           ),
           if (firebaseAuth.currentUser?.email != null &&
               widget.student.studentData!.autor_id! !=
                   firebaseAuth.currentUser?.uid)
             ElevatedButton(
-                onPressed: toggleFollow, child: const Icon(Icons.thumb_up)),
+                onPressed: toggleFollow, child: const Text("Obserwuj")),
           ElevatedButton(
             onPressed: () async {
               var res = await Navigator.push(
@@ -298,7 +298,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 }
               });
             },
-            child: const Icon(Icons.barcode_reader),
+            child: const Text("Porównaj kod"),
           ),
           if (barcode.isNotEmpty &&
               barcode == widget.student.studentData!.code! &&
@@ -315,7 +315,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           if (firebaseAuth.currentUser?.email != null)
             ElevatedButton(
               onPressed: addComment,
-              child: const Icon(Icons.add_comment),
+              child: const Text("Dodaj komentarz"),
             )
           else
             Container(),
