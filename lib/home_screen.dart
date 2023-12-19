@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_project/all_map_screen.dart';
+import 'package:firebase_project/auth_gate.dart';
 import 'package:firebase_project/form_screen.dart';
 import 'package:firebase_project/models/student_model.dart';
 import 'package:firebase_project/user_offers_screen.dart';
@@ -14,6 +15,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:location/location.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,8 +82,33 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Promocje"),
+        title: Text("Promocje"),
+        actions: [
+          if(firebaseAuth.currentUser?.email != null)
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<ProfileScreen>(
+                  builder: (context) => ProfileScreen(
+                    appBar: AppBar(
+                      title: const Text("Profil użytkownika"),
+                    ),
+                    actions: [
+                      SignedOutAction((context) {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+                      })
+                    ],
+                  ),
+                ),
+              );
+            },
+          )
+        ],
+        automaticallyImplyLeading: false,
       ),
+
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -163,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => LoginScreen(),
+                        MaterialPageRoute(builder: (context) => AuthGate(),
                         )
                     );
                   },
@@ -171,15 +199,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             else
               Container(),
-            if (firebaseAuth.currentUser?.email != null)
-              ElevatedButton(
-                  onPressed: () {
-                    firebaseAuth.signOut();
-                    setState(() {
-                      user = null;
-                    });
-                  },
-                  child: const Text("Wyloguj")),
             ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -200,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 context, MaterialPageRoute(builder: (context) => FormScreen()));
           } else {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => LoginScreen()));
+                MaterialPageRoute(builder: (context) => AuthGate()));
           }
         },
         child: const Icon(Icons.add),
