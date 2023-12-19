@@ -1,8 +1,9 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_project/all_map_screen.dart';
 import 'package:firebase_project/auth_gate.dart';
+import 'package:firebase_project/barcode_offers_screen.dart';
 import 'package:firebase_project/form_screen.dart';
-import 'package:firebase_project/models/student_model.dart';
+import 'package:firebase_project/models/offer_model.dart';
 import 'package:firebase_project/user_offers_screen.dart';
 import 'package:firebase_project/followed_offers_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ import 'package:location/location.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -32,24 +35,24 @@ FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 class _HomeScreenState extends State<HomeScreen> {
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
-
   //String _sortBy = "data_od"; // Domyślne sortowanie
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _oldPriceController = TextEditingController();
   final TextEditingController _newPriceController = TextEditingController();
   String? user = firebaseAuth.currentUser?.email;
 
-  List<Student> studentList = [];
-  List<Student> filteredStudentList = [];
+  List<Offer> offerList = [];
+  List<Offer> filteredOfferList = [];
   bool ascending = true;
   bool isLoading = false;
+  String barcode="";
 
   @override
   void initState() {
     super.initState();
-    retrieveStudentData();
+    retrieveOfferData();
     user = firebaseAuth.currentUser?.email;
-    filteredStudentList.addAll(studentList);
+    filteredOfferList.addAll(offerList);
     _getCurrentLocation();
   }
 
@@ -82,29 +85,59 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Promocje"),
+        title: const Text("PROMOCJE"),
         actions: [
-          if(firebaseAuth.currentUser?.email != null)
+
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              Navigator.push(
+              if(firebaseAuth.currentUser?.email != null)
+              {
+                Navigator.push(
                 context,
                 MaterialPageRoute<ProfileScreen>(
                   builder: (context) => ProfileScreen(
                     appBar: AppBar(
-                      title: const Text("Profil użytkownika"),
+                      title: const Text("Mój profil"),
                     ),
                     actions: [
                       SignedOutAction((context) {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
                       })
                     ],
                   ),
                 ),
               );
+              } else {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AuthGate()));
+              }
             },
-          )
+            tooltip: "Profil",
+          ),
+          if(firebaseAuth.currentUser?.email != null)
+          IconButton(onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => FollowedOffersScreen()));
+          }, icon: const Icon(Icons.favorite),
+          tooltip: "Obserwowane",),
+          if(firebaseAuth.currentUser?.email != null)
+          IconButton(onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => UserOffersScreen()));
+          }, icon: const Icon(Icons.my_library_add),
+          tooltip: "Moje ogłoszenia",),
+          IconButton(onPressed: () async {
+            var res = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimpleBarcodeScannerPage(),
+                ));
+            setState(() {
+              if (res is String) {
+                barcode = res;
+              }
+            });
+            Navigator.push(context, MaterialPageRoute(builder: (context) => BarcodeOffersScreen(barcode: barcode)));
+          }, icon: const Icon(Icons.barcode_reader),
+          tooltip: "Szukaj po kodzie"),
         ],
         automaticallyImplyLeading: false,
       ),
@@ -112,25 +145,21 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            if (firebaseAuth.currentUser?.email == null)
-              Container()
-            else
-              Text("Zalogowano jako: ${firebaseAuth.currentUser?.email!}"),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => SortScreen(
-                      studentList: studentList,
-                      sortStudentList: sortStudentList,
+                      offerList: offerList,
+                      sortOfferList: sortOfferList,
                     ),
                   ),
                 );
               },
               child: const Text("Sortuj"),
             ),
-            if (firebaseAuth.currentUser?.email != null)
+            /*if (firebaseAuth.currentUser?.email != null)
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -141,8 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 child: const Text("Moje ogloszenia"),
-              ),
-            if (firebaseAuth.currentUser?.email != null)
+              ),*/
+            /*if (firebaseAuth.currentUser?.email != null)
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -153,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 child: const Text("Obserwowane"),
-              ),
+              ),*/
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -173,39 +202,39 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              AllMapScreen(studentList: filteredStudentList)));
+                              AllMapScreen(offerList: filteredOfferList)));
                 },
-                child: const Text("Pokaz na mapie")),
+                child: const Text("Mapa")),
             if (isLoading)
               const CircularProgressIndicator()
             else
-              for (int i = 0; i < filteredStudentList.length; i++)
-                studentWidget(filteredStudentList[i]),
+              for (int i = 0; i < filteredOfferList.length; i++)
+                offerWidget(filteredOfferList[i]),
             ElevatedButton(
                 onPressed: () {
-                  studentList.clear();
-                  retrieveStudentData();
+                  offerList.clear();
+                  retrieveOfferData();
                 },
                 child: const Icon(Icons.refresh)),
-            if (firebaseAuth.currentUser?.email == null)
+            /*if (firebaseAuth.currentUser?.email == null)
               ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => AuthGate(),
+                        MaterialPageRoute(builder: (context) => const AuthGate(),
                         )
                     );
                   },
                   child: const Text("Logowanie"))
 
             else
-              Container(),
-            ElevatedButton(
+              Container(),*/
+            /*ElevatedButton(
                 onPressed: () {
                   setState(() {
                     user = firebaseAuth.currentUser?.email;
                   });
                 },
-                child: const Text("aktu")),
+                child: const Text("aktu")),*/
           ],
         ),
       ),
@@ -219,51 +248,57 @@ class _HomeScreenState extends State<HomeScreen> {
                 context, MaterialPageRoute(builder: (context) => FormScreen()));
           } else {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => AuthGate()));
+                MaterialPageRoute(builder: (context) => const AuthGate()));
           }
         },
         child: const Icon(Icons.add),
+        tooltip: "Dodaj ogłoszenie",
       ),
     );
   }
 
   //wczytywanie ofert z bazy
-  void retrieveStudentData() {
-    studentList.clear();
-    filteredStudentList.clear(); // Wyczyść również filteredStudentList
+  void retrieveOfferData() {
+    offerList.clear();
+    filteredOfferList.clear(); // Wyczyść również filteredStOfferList
     final DateTime currentDate = DateTime.now();
-    dbRef.child("Oferty").onChildAdded.listen((data) {
-      StudentData studentData =
-          StudentData.fromJson(data.snapshot.value as Map);
-      DateTime dataOd = DateTime.parse(studentData.data_od!);
-      DateTime dataDo = DateTime.parse(studentData.data_do!);
+    dbRef.child("Oferty").onChildAdded.listen((data) async {
+      OfferData offerData =
+          OfferData.fromJson(data.snapshot.value as Map);
+      DateTime dataOd = DateTime.parse(offerData.data_od!);
+      DateTime dataDo = DateTime.parse(offerData.data_do!);
       if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
-        Student student =
-            Student(key: data.snapshot.key, studentData: studentData);
-        studentList.add(student);
-        filteredStudentList.add(student); // Dodaj ofertę do filteredStudentList
+        Offer offer =
+            Offer(key: data.snapshot.key, offerData: offerData);
+        offerList.add(offer);
+        filteredOfferList.add(offer); // Dodaj ofertę do filteredOfferList
         setState(() {});
       } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
+        String imagePath = offerData.image_path ?? "";
+        // Usuń obraz z Firebase Storage
+        if (imagePath.isNotEmpty) {
+          await FirebaseStorage.instance.refFromURL(imagePath).delete();
+        }
         dbRef.child("Oferty").child(data.snapshot.key!).remove();
       }
     });
   }
 
   //widget pojedynczej oferty
-  Widget studentWidget(Student student) {
+  Widget offerWidget(Offer offer) {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => OfferDetailsScreen(student: student),
+          builder: (context) => OfferDetailsScreen(offer: offer),
         ));
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.all(5),
+        padding: const EdgeInsets.all(3),
         margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black),
+          border: Border.all(color: Colors.black,width: 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -272,28 +307,34 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(student.studentData!.nazwa!),
-                Text(student.studentData!.kategoria!),
-                Text(student.studentData!.stara_cena!),
-                Text(student.studentData!.nowa_cena!),
-                Text("${student.studentData!.przecena!}%"),
-                Text(student.studentData!.data_od!.split(' ')[0]),
-                Text(student.studentData!.data_do!.split(' ')[0]),
+                Text("Nazwa: ${offer.offerData!.nazwa!}"),
+                Text("Kategoria: ${offer.offerData!.kategoria!}"),
+                //Text(offer.offerData!.stara_cena!),
+                Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
+                Text("Przecena: ${offer.offerData!.przecena!}%"),
+                //Text(offer.offerData!.data_od!.split(' ')[0]),
+                Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
               ],
             ),
-            if (student.studentData!.image_path != "")
-              Image.network(
-                student.studentData!.image_path!,
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
+            if (offer.offerData!.image_path != "")
+              Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 5),
+                ),
+                child: Image.network(offer.offerData!.image_path!
+                ),
               )
             else
-              Image.asset(
-                'assets/placeholder_image.png', // Zastępcze zdjęcie
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
+              Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 5),
+                ),
+                child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
+                ),
               ),
           ],
         ),
@@ -302,31 +343,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Funkcja sortująca oferty
-  void sortStudentList(String sortBy, bool ascending) {
+  void sortOfferList(String sortBy, bool ascending) {
     switch (sortBy) {
       case "nazwa":
-        filteredStudentList.sort(
-            (a, b) => a.studentData!.nazwa!.compareTo(b.studentData!.nazwa!));
+        filteredOfferList.sort(
+            (a, b) => a.offerData!.nazwa!.compareTo(b.offerData!.nazwa!));
         break;
       case "data_od":
-        filteredStudentList.sort((a, b) =>
-            DateTime.parse(a.studentData!.data_od!)
-                .compareTo(DateTime.parse(b.studentData!.data_od!)));
+        filteredOfferList.sort((a, b) =>
+            DateTime.parse(a.offerData!.data_od!)
+                .compareTo(DateTime.parse(b.offerData!.data_od!)));
         break;
       case "przecena":
-        filteredStudentList.sort((a, b) => int.parse(a.studentData!.przecena!)
-            .compareTo(int.parse(b.studentData!.przecena!)));
+        filteredOfferList.sort((a, b) => int.parse(a.offerData!.przecena!)
+            .compareTo(int.parse(b.offerData!.przecena!)));
         break;
       case "cena":
-        filteredStudentList.sort((a, b) => int.parse(a.studentData!.nowa_cena!)
-            .compareTo(int.parse(b.studentData!.nowa_cena!)));
+        filteredOfferList.sort((a, b) => int.parse(a.offerData!.nowa_cena!)
+            .compareTo(int.parse(b.offerData!.nowa_cena!)));
         break;
       default:
         break;
     }
 
     if (!ascending) {
-      filteredStudentList = filteredStudentList.reversed.toList();
+      filteredOfferList = filteredOfferList.reversed.toList();
     }
 
     setState(() {});
@@ -343,34 +384,34 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
 
-    filteredStudentList.clear();
+    filteredOfferList.clear();
     LocationData? userLocation = await getUserLocation();
 
     if (userLocation != null) {
-      filteredStudentList.addAll(studentList.where((student) {
+      filteredOfferList.addAll(offerList.where((offer) {
         // Filtruj kategorie
         bool categoryFilter = categories.isEmpty ||
-            categories.contains(student.studentData!.kategoria!);
+            categories.contains(offer.offerData!.kategoria!);
 
         // Filtruj cenę
         bool priceFilter = true;
         if (priceFrom != null && priceTo != null) {
-          int studentPrice = int.parse(student.studentData!.nowa_cena ?? "0");
+          int offerPrice = int.parse(offer.offerData!.nowa_cena ?? "0");
           int from = int.parse(priceFrom);
           int to = int.parse(priceTo);
-          priceFilter = studentPrice >= from && studentPrice <= to;
+          priceFilter = offerPrice >= from && offerPrice <= to;
         }
 
         // Filtruj odległość
         bool distanceFilter = true;
         if (maxDistance != null) {
-          if (student.studentData!.latitude != null &&
-              student.studentData!.longitude != null) {
+          if (offer.offerData!.latitude != null &&
+              offer.offerData!.longitude != null) {
             double offerDistance = calculateDistance(
               userLocation.latitude!,
               userLocation.longitude!,
-              student.studentData!.latitude!,
-              student.studentData!.longitude!,
+              offer.offerData!.latitude!,
+              offer.offerData!.longitude!,
             );
             distanceFilter = offerDistance <= maxDistance;
           } else {

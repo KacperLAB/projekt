@@ -1,11 +1,11 @@
-class Student {
+class Offer {
   String? key;
-  StudentData? studentData;
+  OfferData? offerData;
 
-  Student({this.key, this.studentData});
+  Offer({this.key, this.offerData});
 }
 
-class StudentData {
+class OfferData {
   String? nazwa;
   String? kategoria;
   String? stara_cena;
@@ -20,7 +20,7 @@ class StudentData {
   double? longitude;
   String? code;
 
-  StudentData({
+  OfferData({
     this.nazwa,
     this.kategoria,
     this.stara_cena,
@@ -35,7 +35,7 @@ class StudentData {
     this.code,
   });
 
-  StudentData.fromJson(Map<dynamic, dynamic>? json) {
+  OfferData.fromJson(Map<dynamic, dynamic>? json) {
     if (json != null) {
       nazwa = json["nazwa"];
       kategoria = json["kategoria"];

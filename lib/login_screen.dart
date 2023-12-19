@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 },
                 child: const Text("Zaloguj")),
-            ElevatedButton(onPressed: signInWithGoogle, child: Text("Google")),
+            ElevatedButton(onPressed: signInWithGoogle, child: const Text("Google")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.push(context,

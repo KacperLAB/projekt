@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_project/models/student_model.dart';
+import 'package:firebase_project/models/offer_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_project/details_screen.dart';
@@ -12,7 +12,7 @@ class UserOffersScreen extends StatefulWidget {
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _UserOffersScreenState extends State<UserOffersScreen> {
-  List<Student> userOffersList = [];
+  List<Offer> userOffersList = [];
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
   @override
@@ -51,15 +51,15 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
           .equalTo(currentUserID)
           .onChildAdded
           .listen((data) {
-        StudentData studentData =
-            StudentData.fromJson(data.snapshot.value as Map);
-        DateTime dataOd = DateTime.parse(studentData.data_od!);
-        DateTime dataDo = DateTime.parse(studentData.data_do!);
+        OfferData offerData =
+            OfferData.fromJson(data.snapshot.value as Map);
+        DateTime dataOd = DateTime.parse(offerData.data_od!);
+        DateTime dataDo = DateTime.parse(offerData.data_do!);
         if ((currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) ||
             (currentDate.isBefore(dataOd) && currentDate.isBefore(dataDo))) {
-          Student student =
-              Student(key: data.snapshot.key, studentData: studentData);
-          userOffersList.add(student);
+          Offer offer =
+              Offer(key: data.snapshot.key, offerData: offerData);
+          userOffersList.add(offer);
           setState(() {});
         } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
           dbRef.child("Oferty").child(data.snapshot.key!).remove();
@@ -69,11 +69,11 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
   }
 
   //widget pojedynczej oferty
-  Widget offerWidget(Student student) {
+  Widget offerWidget(Offer offer) {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => OfferDetailsScreen(student: student),
+          builder: (context) => OfferDetailsScreen(offer: offer),
         ));
       },
       child: Container(
@@ -82,7 +82,7 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
         margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black),
+          border: Border.all(color: Colors.black,width: 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -91,28 +91,34 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(student.studentData!.nazwa!),
-                Text(student.studentData!.kategoria!),
-                Text(student.studentData!.stara_cena!),
-                Text(student.studentData!.nowa_cena!),
-                Text("${student.studentData!.przecena!}%"),
-                Text(student.studentData!.data_od!.split(' ')[0]),
-                Text(student.studentData!.data_do!.split(' ')[0]),
+                Text("Nazwa: ${offer.offerData!.nazwa!}"),
+                Text("Kategoria: ${offer.offerData!.kategoria!}"),
+                //Text(offer.offerData!.stara_cena!),
+                Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
+                Text("Przecena: ${offer.offerData!.przecena!}%"),
+                //Text(offer.offerData!.data_od!.split(' ')[0]),
+                Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
               ],
             ),
-            if (student.studentData!.image_path != "")
-              Image.network(
-                student.studentData!.image_path!,
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
+            if (offer.offerData!.image_path != "")
+              Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 5),
+                ),
+                child: Image.network(offer.offerData!.image_path!
+                ),
               )
             else
-              Image.asset(
-                'assets/placeholder_image.png', // Zastępcze zdjęcie
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
+              Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 5),
+                ),
+                child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
+                ),
               ),
           ],
         ),

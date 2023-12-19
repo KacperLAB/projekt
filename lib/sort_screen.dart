@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_project/models/student_model.dart';
+import 'package:firebase_project/models/offer_model.dart';
 
 class SortScreen extends StatelessWidget {
-  final List<Student> studentList;
-  final Function(String, bool) sortStudentList;
+  final List<Offer> offerList;
+  final Function(String, bool) sortOfferList;
 
   const SortScreen(
-      {Key? key, required this.studentList, required this.sortStudentList})
+      {Key? key, required this.offerList, required this.sortOfferList})
       : super(key: key);
 
   @override
@@ -21,56 +21,56 @@ class SortScreen extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                sortStudentList("nazwa", true);
+                sortOfferList("nazwa", true);
                 Navigator.pop(context);
               },
               child: const Text("Sortuj po nazwie A-Z"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("nazwa", false);
+                sortOfferList("nazwa", false);
                 Navigator.pop(context);
               },
               child: const Text("Sortuj po nazwie Z-A"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("data_od", true);
+                sortOfferList("data_od", true);
                 Navigator.pop(context);
               },
               child: const Text("Dodane najpozniej"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("data_od", false);
+                sortOfferList("data_od", false);
                 Navigator.pop(context);
               },
               child: const Text("Dodane najwczesniej"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("przecena", false);
+                sortOfferList("przecena", false);
                 Navigator.pop(context);
               },
               child: const Text("Przecena malejąco"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("przecena", true);
+                sortOfferList("przecena", true);
                 Navigator.pop(context);
               },
               child: const Text("Przecena rosnąco"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("cena", true);
+                sortOfferList("cena", true);
                 Navigator.pop(context);
               },
               child: const Text("Cena rosnąco"),
             ),
             ElevatedButton(
               onPressed: () {
-                sortStudentList("cena", false);
+                sortOfferList("cena", false);
                 Navigator.pop(context);
               },
               child: const Text("Cena malejąco"),

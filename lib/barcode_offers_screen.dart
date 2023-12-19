@@ -4,15 +4,20 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_project/details_screen.dart';
 
-class FollowedOffersScreen extends StatefulWidget {
+class BarcodeOffersScreen extends StatefulWidget {
+
+  final String barcode;
+
+  BarcodeOffersScreen({required this.barcode});
+
   @override
-  _FollowedOffersScreenState createState() => _FollowedOffersScreenState();
+  _BarcodeOffersScreenState createState() => _BarcodeOffersScreenState();
 }
 
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
-  List<Offer> followedOffersList = [];
+class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
+  List<Offer> barcodeOffersList = [];
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
   @override
@@ -25,59 +30,48 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Obserwowane ogłoszenia"),
+        title: const Text("Pasujące produkty"),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            for (int i = 0; i < followedOffersList.length; i++)
-              offerWidget(followedOffersList[i])
+            if(barcodeOffersList.isEmpty)
+            const Center(child: Text("Brak wyników",textAlign: TextAlign.center))
+            else
+            for (int i = 0; i < barcodeOffersList.length; i++)
+              offerWidget(barcodeOffersList[i])
           ],
         ),
       ),
     );
   }
 
-  // Reszta kodu pozostaje bez zmian
+  // Pobieranie pasujących ofert
 
   void retrieveOffersData() {
-    followedOffersList.clear();
+    barcodeOffersList.clear();
     String? currentUserID = firebaseAuth.currentUser?.uid;
     final DateTime currentDate = DateTime.now();
-
     if (currentUserID != null) {
-      dbRef.child("Oferty").onChildAdded.listen((data) {
+      dbRef
+          .child("Oferty")
+          .orderByChild("code")
+          .equalTo(widget.barcode)
+          .onChildAdded
+          .listen((data) {
         OfferData offerData =
-            OfferData.fromJson(data.snapshot.value as Map);
+        OfferData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(offerData.data_od!);
         DateTime dataDo = DateTime.parse(offerData.data_do!);
-
-        // Sprawdź, czy obserwujący aktualnie zalogowanego użytkownika znajduje się w liście obserwujących oferty
-        dbRef
-            .child('Oferty/${data.snapshot.key}/obserwujacy')
-            .orderByChild('uid')
-            .equalTo(currentUserID)
-            .once()
-            .then((event) {
-          DataSnapshot snapshot = event.snapshot;
-          Map<dynamic, dynamic>? followerData =
-              snapshot.value as Map<dynamic, dynamic>?;
-
-          if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
-            // Oferta jest aktualna
-            if (followerData != null && followerData.isNotEmpty) {
-              // Znaleziono obserwującego, dodaj ofertę do listy
-              Offer offer =
-                  Offer(key: data.snapshot.key, offerData: offerData);
-              followedOffersList.add(offer);
-              setState(() {});
-            }
-          } else if (currentDate.isAfter(dataOd) &&
-              currentDate.isAfter(dataDo)) {
-            // Oferta przeterminowana, usuń z bazy danych
-            dbRef.child("Oferty").child(data.snapshot.key!).remove();
-          }
-        });
+        if ((currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) ||
+            (currentDate.isBefore(dataOd) && currentDate.isBefore(dataDo))) {
+          Offer offer =
+          Offer(key: data.snapshot.key, offerData: offerData);
+          barcodeOffersList.add(offer);
+          setState(() {});
+        } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
+          dbRef.child("Oferty").child(data.snapshot.key!).remove();
+        }
       });
     }
   }
