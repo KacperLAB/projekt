@@ -20,15 +20,12 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
@@ -45,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Offer> filteredOfferList = [];
   bool ascending = true;
   bool isLoading = false;
-  String barcode="";
+  String barcode = "";
 
   @override
   void initState() {
@@ -67,10 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _selectedLocation =
             LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
       });
-      //print(_currentLocation!.latitude);
-      //print(_currentLocation!.longitude);
-      //print(_selectedLocation!.latitude);
-      //print(_selectedLocation!.longitude);
     } catch (e) {
       print("Error getting location: $e");
     }
@@ -87,65 +80,103 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("PROMOCJE"),
         actions: [
-
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              if(firebaseAuth.currentUser?.email != null)
-              {
+              if (firebaseAuth.currentUser?.email != null) {
                 Navigator.push(
-                context,
-                MaterialPageRoute<ProfileScreen>(
-                  builder: (context) => ProfileScreen(
-                    appBar: AppBar(
-                      title: const Text("Mój profil"),
+                  context,
+                  MaterialPageRoute<ProfileScreen>(
+                    builder: (context) => ProfileScreen(
+                      appBar: AppBar(
+                        title: const Text("Mój profil"),
+                      ),
+                      actions: [
+                        SignedOutAction((context) {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const HomeScreen()));
+                        })
+                      ],
                     ),
-                    actions: [
-                      SignedOutAction((context) {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-                      })
-                    ],
                   ),
-                ),
-              );
+                );
               } else {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const AuthGate()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const AuthGate()));
               }
             },
             tooltip: "Profil",
           ),
-          if(firebaseAuth.currentUser?.email != null)
-          IconButton(onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FollowedOffersScreen()));
-          }, icon: const Icon(Icons.favorite),
-          tooltip: "Obserwowane",),
-          if(firebaseAuth.currentUser?.email != null)
-          IconButton(onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => UserOffersScreen()));
-          }, icon: const Icon(Icons.my_library_add),
-          tooltip: "Moje ogłoszenia",),
-          IconButton(onPressed: () async {
-            var res = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleBarcodeScannerPage(),
-                ));
-            setState(() {
-              if (res is String) {
-                barcode = res;
-              }
-            });
-            Navigator.push(context, MaterialPageRoute(builder: (context) => BarcodeOffersScreen(barcode: barcode)));
-          }, icon: const Icon(Icons.barcode_reader),
-          tooltip: "Szukaj po kodzie"),
+          if (firebaseAuth.currentUser?.email != null)
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => FollowedOffersScreen()));
+              },
+              icon: const Icon(Icons.favorite),
+              tooltip: "Obserwowane",
+            ),
+          if (firebaseAuth.currentUser?.email != null)
+            IconButton(
+              onPressed: () async {
+                await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => UserOffersScreen()));
+                await retrieveOfferData();
+              },
+              icon: const Icon(Icons.my_library_add),
+              tooltip: "Moje ogłoszenia",
+            ),
         ],
         automaticallyImplyLeading: false,
       ),
-
       body: SingleChildScrollView(
         child: Column(
           children: [
-            ElevatedButton(
+            if (isLoading)
+              Container(
+                margin: EdgeInsets.only(top: 300),
+                child: Center(
+                  child: const CircularProgressIndicator(),
+                ),
+              )
+            else
+              for (int i = 0; i < filteredOfferList.length; i++)
+                offerWidget(filteredOfferList[i]),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          _nameController.text = "";
+          _oldPriceController.text = "";
+          _newPriceController.text = "";
+          if (firebaseAuth.currentUser?.email != null) {
+            await Navigator.push(
+                context, MaterialPageRoute(builder: (context) => FormScreen()));
+            await retrieveOfferData();
+          } else {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const AuthGate()));
+          }
+        },
+        tooltip: "Dodaj ogłoszenie",
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -157,33 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Text("Sortuj"),
+              icon: const Icon(Icons.sort),
             ),
-            /*if (firebaseAuth.currentUser?.email != null)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserOffersScreen(),
-                    ),
-                  );
-                },
-                child: const Text("Moje ogloszenia"),
-              ),*/
-            /*if (firebaseAuth.currentUser?.email != null)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FollowedOffersScreen(),
-                    ),
-                  );
-                },
-                child: const Text("Obserwowane"),
-              ),*/
-            ElevatedButton(
+            IconButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -194,82 +201,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              child: const Text("Filtruj"),
+              icon: const Icon(Icons.filter_alt),
             ),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              AllMapScreen(offerList: filteredOfferList)));
-                },
-                child: const Text("Mapa")),
-            if (isLoading)
-              const CircularProgressIndicator()
-            else
-              for (int i = 0; i < filteredOfferList.length; i++)
-                offerWidget(filteredOfferList[i]),
-            ElevatedButton(
-                onPressed: () {
-                  offerList.clear();
-                  retrieveOfferData();
-                },
-                child: const Icon(Icons.refresh)),
-            /*if (firebaseAuth.currentUser?.email == null)
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => const AuthGate(),
-                        )
-                    );
-                  },
-                  child: const Text("Logowanie"))
-
-            else
-              Container(),*/
-            /*ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    user = firebaseAuth.currentUser?.email;
-                  });
-                },
-                child: const Text("aktu")),*/
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AllMapScreen(offerList: filteredOfferList),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.map_rounded),
+            ),
+            IconButton(
+              onPressed: () async {
+                var res = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SimpleBarcodeScannerPage(),
+                  ),
+                );
+                setState(() {
+                  if (res is String) {
+                    barcode = res;
+                  }
+                });
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            BarcodeOffersScreen(barcode: barcode)));
+              },
+              icon: const Icon(Icons.barcode_reader),
+              tooltip: "Szukaj po kodzie",
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          _nameController.text = "";
-          _oldPriceController.text = "";
-          _newPriceController.text = "";
-          if (firebaseAuth.currentUser?.email != null) {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => FormScreen()));
-          } else {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const AuthGate()));
-          }
-        },
-        child: const Icon(Icons.add),
-        tooltip: "Dodaj ogłoszenie",
       ),
     );
   }
 
   //wczytywanie ofert z bazy
-  void retrieveOfferData() {
+  Future<void> retrieveOfferData() async {
     offerList.clear();
     filteredOfferList.clear(); // Wyczyść również filteredStOfferList
     final DateTime currentDate = DateTime.now();
     dbRef.child("Oferty").onChildAdded.listen((data) async {
-      OfferData offerData =
-          OfferData.fromJson(data.snapshot.value as Map);
+      OfferData offerData = OfferData.fromJson(data.snapshot.value as Map);
       DateTime dataOd = DateTime.parse(offerData.data_od!);
       DateTime dataDo = DateTime.parse(offerData.data_do!);
       if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
-        Offer offer =
-            Offer(key: data.snapshot.key, offerData: offerData);
+        Offer offer = Offer(key: data.snapshot.key, offerData: offerData);
         offerList.add(offer);
         filteredOfferList.add(offer); // Dodaj ofertę do filteredOfferList
         setState(() {});
@@ -298,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black,width: 3),
+          border: Border.all(color: Colors.black, width: 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -323,8 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.network(offer.offerData!.image_path!
-                ),
+                child: Image.network(offer.offerData!.image_path!),
               )
             else
               Container(
@@ -333,8 +316,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
-                ),
+                child: Image.asset(
+                    'assets/placeholder_image.png' // Zastępcze zdjęcie
+                    ),
               ),
           ],
         ),
@@ -346,30 +330,27 @@ class _HomeScreenState extends State<HomeScreen> {
   void sortOfferList(String sortBy, bool ascending) {
     switch (sortBy) {
       case "nazwa":
-        filteredOfferList.sort(
-            (a, b) => a.offerData!.nazwa!.compareTo(b.offerData!.nazwa!));
+        filteredOfferList
+            .sort((a, b) => a.offerData!.nazwa!.compareTo(b.offerData!.nazwa!));
         break;
       case "data_od":
-        filteredOfferList.sort((a, b) =>
-            DateTime.parse(a.offerData!.data_od!)
-                .compareTo(DateTime.parse(b.offerData!.data_od!)));
+        filteredOfferList.sort((a, b) => DateTime.parse(a.offerData!.data_od!)
+            .compareTo(DateTime.parse(b.offerData!.data_od!)));
         break;
       case "przecena":
         filteredOfferList.sort((a, b) => int.parse(a.offerData!.przecena!)
             .compareTo(int.parse(b.offerData!.przecena!)));
         break;
       case "cena":
-        filteredOfferList.sort((a, b) => int.parse(a.offerData!.nowa_cena!)
-            .compareTo(int.parse(b.offerData!.nowa_cena!)));
+        filteredOfferList.sort((a, b) => double.parse(a.offerData!.nowa_cena!)
+            .compareTo(double.parse(b.offerData!.nowa_cena!)));
         break;
       default:
         break;
     }
-
     if (!ascending) {
       filteredOfferList = filteredOfferList.reversed.toList();
     }
-
     setState(() {});
   }
 
@@ -396,9 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
         // Filtruj cenę
         bool priceFilter = true;
         if (priceFrom != null && priceTo != null) {
-          int offerPrice = int.parse(offer.offerData!.nowa_cena ?? "0");
-          int from = int.parse(priceFrom);
-          int to = int.parse(priceTo);
+          double offerPrice = double.parse(offer.offerData!.nowa_cena ?? "0");
+          double from = double.parse(priceFrom);
+          double to = double.parse(priceTo);
           priceFilter = offerPrice >= from && offerPrice <= to;
         }
 

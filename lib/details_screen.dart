@@ -28,12 +28,14 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
 
   int positiveRatings = 0;
   int negativeRatings = 0;
+  bool isFollowing = true;
 
   @override
   void initState() {
     super.initState();
     fetchComments();
     fetchRatings();
+    hasUserFollowed();
   }
 
   void fetchComments() async {
@@ -144,25 +146,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     }
   }
 
-  ElevatedButton buildRatingButton(bool isPositive) {
-    return ElevatedButton(
-      onPressed: isPositive ? increaseRating : decreaseRating,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isPositive
-            ? hasUserRatedPositive()
-                ? Colors.lightGreen
-                : null
-            : hasUserRatedNegative()
-                ? Colors.red[200]
-                : null,
-      ),
-      child: Icon(
-        isPositive ? Icons.thumb_up : Icons.thumb_down,
-        color: Colors.black,
-      ),
-    );
-  }
-
   void addComment() {
     String commentText = _commentController.text
         .trim(); // Usunięcie białych znaków z początku i końca
@@ -188,13 +171,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
         content: Text('Komentarz nie może być pusty.'),
       ));
     }
-  }
-
-  void addFollow() {
-    dbRef
-        .child('Oferty/${widget.offer.key}/obserwujacy')
-        .push()
-        .set({"uid": firebaseAuth.currentUser!.uid, "email": user});
   }
 
   void toggleFollow() async {
@@ -236,249 +212,268 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     }
   }
 
+  void hasUserFollowed() async {
+    String userID = firebaseAuth.currentUser?.uid ?? '';
+    String? offerID = widget.offer.key;
+    DatabaseReference followersRef = dbRef.child('Oferty/$offerID/obserwujacy');
+    DatabaseEvent event =
+        await followersRef.orderByChild('uid').equalTo(userID).once();
+    DataSnapshot snapshot = event.snapshot;
+    Map<dynamic, dynamic>? values = snapshot.value as Map<dynamic, dynamic>?;
+    if (values == null || values.isEmpty) {
+      setState(() {
+        isFollowing = false;
+      });
+    } else {
+      setState(() {
+        isFollowing = true;
+      });
+    }
+  }
+
   String barcode = "";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.offer.offerData!.nazwa!),
+        title: Text(
+            "${widget.offer.offerData!.nazwa!} - ${widget.offer.offerData!.kategoria!}"),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Dostosuj wartość marginesu według potrzeb
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              if (widget.offer.offerData!.image_path != "")
-              Container(
-                height: 200,
-                width: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(width: 5),
-                ),
-                child: Image.network(widget.offer.offerData!.image_path!
-                ),
-              )
-              else
-                Container(
-                  height: 200,
-                  width: 200,
-                  decoration: BoxDecoration(
-                    border: Border.all(width: 5),
-                  ),
-                  child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
-                  ),
-                ),
-              Text("Kategoria: ${widget.offer.offerData!.kategoria!}"),
-              Text("Stara cena: ${widget.offer.offerData!.stara_cena!}"),
-              Text("Nowa cena: ${widget.offer.offerData!.nowa_cena!}"),
-              Text("Przecena: ${widget.offer.offerData!.przecena!}%"),
-              Text(
-                  "Data od: ${widget.offer.offerData!.data_od!.split(' ')[0]}"),
-              Text(
-                  "Data do: ${widget.offer.offerData!.data_do!.split(' ')[0]}"),
-              Text("Oceny pozytywne: $positiveRatings"),
-              Text("Oceny negatywne: $negativeRatings"),
-
-              if (firebaseAuth.currentUser?.email != null &&
-                  widget.offer.offerData!.autor_id! !=
-                      firebaseAuth.currentUser?.uid)
-                buildRatingButton(true),
-              if (firebaseAuth.currentUser?.email != null &&
-                  widget.offer.offerData!.autor_id! !=
-                      firebaseAuth.currentUser?.uid)
-                buildRatingButton(false),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MapScreen(offer: widget.offer),
+        padding: const EdgeInsets.all(10),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Wycentruj w pionie
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (widget.offer.offerData!.image_path != "")
+                  Container(
+                    height: 200,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      border: Border.all(width: 5),
                     ),
-                  );
-                },
-                child: const Text("Pokaż na mapie"),
-              ),
-              if (firebaseAuth.currentUser?.email != null &&
-                  widget.offer.offerData!.autor_id! !=
-                      firebaseAuth.currentUser?.uid)
+                    child: Image.network(widget.offer.offerData!.image_path!),
+                  )
+                else
+                  Container(
+                    height: 200,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      border: Border.all(width: 5),
+                    ),
+                    child: Image.asset('assets/placeholder_image.png'),
+                  ),
+                const Text("Opis: "),
+                Text(widget.offer.offerData!.opis!),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Cena: "),
+                      Text("${widget.offer.offerData!.stara_cena!} zł",
+                          style: const TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.red)),
+                      const Icon(Icons.arrow_forward),
+                      Text("${widget.offer.offerData!.nowa_cena!} zł",
+                          style: const TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Przecena: "),
+                      Text(
+                        "-${widget.offer.offerData!.przecena!}%",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Ważne od "),
+                      Text("${widget.offer.offerData!.data_od!.split(' ')[0]}",
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(" do "),
+                      Text("${widget.offer.offerData!.data_do!.split(' ')[0]}",
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                if (firebaseAuth.currentUser?.email != null &&
+                    widget.offer.offerData!.autor_id! !=
+                        firebaseAuth.currentUser?.uid)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          if (!hasUserRated()) {
+                            increaseRating();
+                          } else {
+                            // Informacja dla użytkownika, że już wcześniej ocenił ofertę
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Już wcześniej oceniłeś tę ofertę.'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.thumb_up),
+                        label: Text(": $positiveRatings"),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                            hasUserRatedPositive() ? Colors.green : null,
+                          ),
+                          // Dodaj stylizację obramowania, gdy przycisk został oceniony wcześniej
+                          side: MaterialStateProperty.all(
+                            BorderSide(
+                              color: hasUserRatedPositive()
+                                  ? Colors.black
+                                  : Colors.transparent,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          if (!hasUserRated()) {
+                            decreaseRating();
+                          } else {
+                            // Informacja dla użytkownika, że już wcześniej ocenił ofertę
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Już wcześniej oceniłeś tę ofertę.'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.thumb_down),
+                        label: Text(": $negativeRatings"),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                            hasUserRatedNegative() ? Colors.red : null,
+                          ),
+                          // Dodaj stylizację obramowania, gdy przycisk został oceniony wcześniej
+                          side: MaterialStateProperty.all(
+                            BorderSide(
+                              color: hasUserRatedNegative()
+                                  ? Colors.black
+                                  : Colors.transparent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ElevatedButton(
-                    onPressed: toggleFollow, child: const Text("Obserwuj")),
-              ElevatedButton(
-                onPressed: () async {
-                  var res = await Navigator.push(
+                  onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SimpleBarcodeScannerPage(),
-                      ));
-                  setState(() {
-                    if (res is String) {
-                      barcode = res;
-                    }
-                  });
-                },
-                child: const Text("Porównaj kod"),
-              ),
-              if (barcode.isNotEmpty &&
-                  barcode == widget.offer.offerData!.code! &&
-                  widget.offer.offerData!.code!.isNotEmpty)
-                const Text("Kod poprawny"),
-              if (barcode.isNotEmpty &&
-                  barcode != widget.offer.offerData!.code! &&
-                  widget.offer.offerData!.code!.isNotEmpty)
-                const Text("Kod niepoprawny"),
-              if (firebaseAuth.currentUser?.email != null)
-               TextField(
+                        builder: (context) => MapScreen(offer: widget.offer),
+                      ),
+                    );
+                  },
+                  child: const Text("Pokaż na mapie"),
+                ),
+                if (firebaseAuth.currentUser?.email != null &&
+                    widget.offer.offerData!.autor_id! !=
+                        firebaseAuth.currentUser?.uid)
+                  ElevatedButton(
+                      onPressed: () {
+                        toggleFollow();
+                        setState(() {
+                          isFollowing = !isFollowing;
+                        });
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(
+                          isFollowing ? Colors.red : null,
+                        ),
+                        side: MaterialStateProperty.all(
+                          BorderSide(
+                            color:
+                                isFollowing ? Colors.black : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                      child: Icon(Icons.favorite)),
+                ElevatedButton(
+                  onPressed: () async {
+                    var res = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SimpleBarcodeScannerPage(),
+                        ));
+                    setState(() {
+                      if (res is String) {
+                        barcode = res;
+                      }
+                    });
+                  },
+                  child: const Text("Porównaj kod"),
+                ),
+                if (barcode.isNotEmpty &&
+                    barcode == widget.offer.offerData!.code! &&
+                    widget.offer.offerData!.code!.isNotEmpty)
+                  const Text("Kod poprawny"),
+                if (barcode.isNotEmpty &&
+                    barcode != widget.offer.offerData!.code! &&
+                    widget.offer.offerData!.code!.isNotEmpty)
+                  const Text("Kod niepoprawny"),
+                if (firebaseAuth.currentUser?.email != null)
+                  TextField(
                     controller: _commentController,
                     maxLines: 5,
                     minLines: 1,
-                    decoration: const InputDecoration(border: OutlineInputBorder(),hintText: "Komentarz"),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Komentarz",
+                    ),
                   )
-              else
-                Container(),
-              if (firebaseAuth.currentUser?.email != null)
-                ElevatedButton(
-                  onPressed: addComment,
-                  child: const Text("Dodaj komentarz"),
-                )
-              else
-                Container(),
-              const Text("Komentarze:"),
-
-              // Dodaj ten kontener z ograniczeniami wysokości
-              Container(
-                height: MediaQuery.of(context).size.height * 0.5, // Dostosuj wysokość według potrzeb
-                child: comments.isNotEmpty
-                    ? ListView.builder(
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(comments[index].text),
-                      subtitle: Text("Autor: ${comments[index].author}"),
-                    );
-                  },
-                )
-                    : const Center(child: Text("Brak komentarzy.")),
-              ),
-            ],
+                else
+                  Container(),
+                if (firebaseAuth.currentUser?.email != null)
+                  ElevatedButton(
+                    onPressed: addComment,
+                    child: const Text("Dodaj komentarz"),
+                  )
+                else
+                  Container(),
+                const Text("Komentarze:"),
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: comments.isNotEmpty
+                      ? ListView.builder(
+                          itemCount: comments.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(comments[index].text),
+                              subtitle:
+                                  Text("Autor: ${comments[index].author}"),
+                            );
+                          },
+                        )
+                      : const Center(child: Text("Brak komentarzy.")),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-
 }
-
-/*
-Text("Kategoria: ${widget.offer.offerData!.kategoria!}"),
-            Text("Stara cena: ${widget.offer.offerData!.stara_cena!}"),
-            Text("Nowa cena: ${widget.offer.offerData!.nowa_cena!}"),
-            Text("Przecena: ${widget.offer.offerData!.przecena!}%"),
-            Text(
-                "Data od: ${widget.offer.offerData!.data_od!.split(' ')[0]}"),
-            Text(
-                "Data do: ${widget.offer.offerData!.data_do!.split(' ')[0]}"),
-            Text("Oceny pozytywne: $positiveRatings"),
-            Text("Oceny negatywne: $negativeRatings"),
-            if (widget.offer.offerData!.image_path != "")
-              Image.network(
-                widget.offer.offerData!.image_path!,
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
-              )
-            else
-              Image.asset(
-                'assets/placeholder_image.png', // Zastępcze zdjęcie
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
-              ),
-            if (firebaseAuth.currentUser?.email != null &&
-                widget.offer.offerData!.autor_id! !=
-                    firebaseAuth.currentUser?.uid)
-              buildRatingButton(true),
-            if (firebaseAuth.currentUser?.email != null &&
-                widget.offer.offerData!.autor_id! !=
-                    firebaseAuth.currentUser?.uid)
-              buildRatingButton(false),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MapScreen(offer: widget.offer),
-                  ),
-                );
-              },
-              child: const Text("Pokaż na mapie"),
-            ),
-            if (firebaseAuth.currentUser?.email != null &&
-                widget.offer.offerData!.autor_id! !=
-                    firebaseAuth.currentUser?.uid)
-              ElevatedButton(
-                  onPressed: toggleFollow, child: const Text("Obserwuj")),
-            ElevatedButton(
-              onPressed: () async {
-                var res = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleBarcodeScannerPage(),
-                    ));
-                setState(() {
-                  if (res is String) {
-                    barcode = res;
-                  }
-                });
-              },
-              child: const Text("Porównaj kod"),
-            ),
-            if (barcode.isNotEmpty &&
-                barcode == widget.offer.offerData!.code! &&
-                widget.offer.offerData!.code!.isNotEmpty)
-              const Text("Kod poprawny"),
-            if (barcode.isNotEmpty &&
-                barcode != widget.offer.offerData!.code! &&
-                widget.offer.offerData!.code!.isNotEmpty)
-              const Text("Kod niepoprawny"),
-            if (firebaseAuth.currentUser?.email != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0), // Dostosuj wartość odstępu według potrzeb
-                child: TextField(
-                  controller: _commentController,
-                  maxLines: 5,
-                  minLines: 1,
-                ),
-              )
-
-            else
-              Container(),
-            if (firebaseAuth.currentUser?.email != null)
-              ElevatedButton(
-                onPressed: addComment,
-                child: const Text("Dodaj komentarz"),
-              )
-            else
-              Container(),
-            const Text("Komentarze:"),
-
-            // Dodaj ten kontener z ograniczeniami wysokości
-            Container(
-              height: MediaQuery.of(context).size.height * 0.5, // Dostosuj wysokość według potrzeb
-              child: comments.isNotEmpty
-                  ? ListView.builder(
-                itemCount: comments.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(comments[index].text),
-                    subtitle: Text("Author: ${comments[index].author}"),
-                  );
-                },
-              )
-                  : const Center(child: Text("Brak komentarzy.")),
-            ),
-
- */

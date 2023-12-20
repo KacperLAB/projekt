@@ -55,7 +55,7 @@ class _AllMapScreenState extends State<AllMapScreen> {
       setState(() {
         _selectedLocation =
             LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
-        isLoading=false;
+        isLoading = false;
       });
     } catch (e) {
       print("Error getting location: $e");
@@ -77,18 +77,20 @@ class _AllMapScreenState extends State<AllMapScreen> {
                 child: CircularProgressIndicator(),
               ),
             ),
-            ElevatedButton(onPressed: () {Navigator.of(context).pop();}, child: Text("Anuluj"))
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Anuluj"))
           ],
         ),
       );
-  }
-    else {
+    } else {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Mapa Ogłoszeń"),
         ),
-        body:
-        GoogleMap(
+        body: GoogleMap(
           onMapCreated: (controller) {
             setState(() {
               _mapController = controller;
@@ -96,8 +98,8 @@ class _AllMapScreenState extends State<AllMapScreen> {
           },
           markers: _markers,
           initialCameraPosition: CameraPosition(
-            target:
-            LatLng(_selectedLocation!.latitude, _selectedLocation!.longitude),
+            target: LatLng(
+                _selectedLocation!.latitude, _selectedLocation!.longitude),
             // Początkowe współrzędne mapy
             zoom: 10,
           ),

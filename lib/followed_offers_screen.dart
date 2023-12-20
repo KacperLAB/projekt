@@ -47,8 +47,7 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
 
     if (currentUserID != null) {
       dbRef.child("Oferty").onChildAdded.listen((data) {
-        OfferData offerData =
-            OfferData.fromJson(data.snapshot.value as Map);
+        OfferData offerData = OfferData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(offerData.data_od!);
         DateTime dataDo = DateTime.parse(offerData.data_do!);
 
@@ -67,8 +66,7 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
             // Oferta jest aktualna
             if (followerData != null && followerData.isNotEmpty) {
               // Znaleziono obserwującego, dodaj ofertę do listy
-              Offer offer =
-                  Offer(key: data.snapshot.key, offerData: offerData);
+              Offer offer = Offer(key: data.snapshot.key, offerData: offerData);
               followedOffersList.add(offer);
               setState(() {});
             }
@@ -96,7 +94,7 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
         margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black,width: 3),
+          border: Border.all(color: Colors.black, width: 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -121,8 +119,7 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.network(offer.offerData!.image_path!
-                ),
+                child: Image.network(offer.offerData!.image_path!),
               )
             else
               Container(
@@ -131,8 +128,9 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
-                ),
+                child: Image.asset(
+                    'assets/placeholder_image.png' // Zastępcze zdjęcie
+                    ),
               ),
           ],
         ),

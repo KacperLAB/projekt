@@ -19,6 +19,7 @@ class OfferData {
   double? latitude;
   double? longitude;
   String? code;
+  String? opis;
 
   OfferData({
     this.nazwa,
@@ -33,6 +34,7 @@ class OfferData {
     this.latitude,
     this.longitude,
     this.code,
+    this.opis,
   });
 
   OfferData.fromJson(Map<dynamic, dynamic>? json) {
@@ -49,6 +51,7 @@ class OfferData {
       latitude = json["latitude"] is double ? json["latitude"] : null;
       longitude = json["longitude"] is double ? json["longitude"] : null;
       code = json["code"];
+      opis = json["opis"];
     }
   }
 }

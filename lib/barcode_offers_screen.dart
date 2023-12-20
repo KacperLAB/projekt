@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_project/details_screen.dart';
 
 class BarcodeOffersScreen extends StatefulWidget {
-
   final String barcode;
 
   BarcodeOffersScreen({required this.barcode});
@@ -35,11 +34,12 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            if(barcodeOffersList.isEmpty)
-            const Center(child: Text("Brak wyników",textAlign: TextAlign.center))
+            if (barcodeOffersList.isEmpty)
+              const Center(
+                  child: Text("Brak wyników", textAlign: TextAlign.center))
             else
-            for (int i = 0; i < barcodeOffersList.length; i++)
-              offerWidget(barcodeOffersList[i])
+              for (int i = 0; i < barcodeOffersList.length; i++)
+                offerWidget(barcodeOffersList[i])
           ],
         ),
       ),
@@ -59,14 +59,12 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
           .equalTo(widget.barcode)
           .onChildAdded
           .listen((data) {
-        OfferData offerData =
-        OfferData.fromJson(data.snapshot.value as Map);
+        OfferData offerData = OfferData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(offerData.data_od!);
         DateTime dataDo = DateTime.parse(offerData.data_do!);
         if ((currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) ||
             (currentDate.isBefore(dataOd) && currentDate.isBefore(dataDo))) {
-          Offer offer =
-          Offer(key: data.snapshot.key, offerData: offerData);
+          Offer offer = Offer(key: data.snapshot.key, offerData: offerData);
           barcodeOffersList.add(offer);
           setState(() {});
         } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
@@ -90,7 +88,7 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
         margin: const EdgeInsets.only(top: 5, left: 10, right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black,width: 3),
+          border: Border.all(color: Colors.black, width: 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -115,8 +113,7 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.network(offer.offerData!.image_path!
-                ),
+                child: Image.network(offer.offerData!.image_path!),
               )
             else
               Container(
@@ -125,8 +122,9 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(width: 5),
                 ),
-                child: Image.asset('assets/placeholder_image.png' // Zastępcze zdjęcie
-                ),
+                child: Image.asset(
+                    'assets/placeholder_image.png' // Zastępcze zdjęcie
+                    ),
               ),
           ],
         ),

@@ -89,40 +89,42 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _oldPriceController = TextEditingController();
   final TextEditingController _newPriceController = TextEditingController();
 
-  DateTime selectedDate = DateTime.now();
-  DateTime selectedDate2 = DateTime.now();
+  DateTime dateFrom = DateTime.now();
+  DateTime dateTo = DateTime.now().add(const Duration(days: 1));
   int ts = 0;
   int ts2 = 0;
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _dateFrom(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: dateFrom,
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
     if (picked != null) {
       setState(() {
-        selectedDate = picked;
-        ts = selectedDate.millisecondsSinceEpoch;
+        dateFrom = picked;
+        ts = dateFrom.millisecondsSinceEpoch;
       });
     }
   }
 
-  Future<void> _selectDate2(BuildContext context) async {
+  Future<void> _dateTo(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
-      firstDate: selectedDate,
+      initialDate: dateFrom.add(const Duration(days: 1)),
+      firstDate: dateFrom.add(const Duration(days: 1)),
       lastDate: DateTime(2101),
     );
+
     if (picked != null) {
       setState(() {
-        selectedDate2 = picked;
-        ts2 = selectedDate2.millisecondsSinceEpoch;
+        dateTo = picked;
+        ts2 = dateTo.millisecondsSinceEpoch;
       });
     }
   }
@@ -147,13 +149,14 @@ class _FormScreenState extends State<FormScreen> {
         "stara_cena": _oldPriceController.text.toString(),
         "nowa_cena": _newPriceController.text.toString(),
         "przecena": przecena.toStringAsFixed(0),
-        "data_od": selectedDate.toString(),
-        "data_do": selectedDate2.toString(),
+        "data_od": dateFrom.toString(),
+        "data_do": dateTo.toString(),
         "autor_id": firebaseAuth.currentUser!.uid,
         "image_path": imagePath,
         "latitude": _selectedLocation!.latitude,
         "longitude": _selectedLocation!.longitude,
-        "code": barcode
+        "code": barcode,
+        "opis": _descriptionController.text.toString()
       };
 
       // Zapisz ofertę w bazie danych
@@ -234,7 +237,7 @@ class _FormScreenState extends State<FormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Formularz"),
+        title: const Text("Dodaj nowe ogłoszenie"),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -242,75 +245,115 @@ class _FormScreenState extends State<FormScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              listPickerField,
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Nazwa"),
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Nazwa"),
+              ),
+              TextField(
+                controller: _descriptionController,
+                maxLines: 5,
+                minLines: 2,
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Opis"),
               ),
               TextField(
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 controller: _oldPriceController,
-                decoration: const InputDecoration(labelText: "Stara cena"),
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Stara cena"),
               ),
               TextField(
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 controller: _newPriceController,
-                decoration: const InputDecoration(labelText: "Nowa cena"),
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(), hintText: "Nowa cena"),
               ),
-              listPickerField,
-              Text("${selectedDate.toLocal()}".split(' ')[0]),
-              //Text("ts_int: $ts"),
-              ElevatedButton(
-                onPressed: () => _selectDate(context),
-                child: const Text("Data od"),
+              Container(
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text("Data od: "),
+                      ElevatedButton(
+                        onPressed: () => _dateFrom(context),
+                        child: Text("${dateFrom.toLocal()}".split(' ')[0]),
+                      ),
+                      Text("Data do: "),
+                      ElevatedButton(
+                        onPressed: () => _dateTo(context),
+                        child: Text("${dateTo.toLocal()}".split(' ')[0]),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              Text("${selectedDate2.toLocal()}".split(' ')[0]),
-              //Text("ts2_int: $ts2"),
-              ElevatedButton(
-                onPressed: () => _selectDate2(context),
-                child: const Text("Data do"),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  var res = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SimpleBarcodeScannerPage(),
-                      ));
-                  setState(() {
-                    if (res is String) {
-                      barcode = res;
-                    }
-                  });
-                },
-                child: const Text("Skanuj kod"),
-              ),
-              Text("wynik skanowania: $barcode"),
-              ElevatedButton(
-                onPressed: _pickImageFromGallery,
-                child: const Text("Dodaj zdjecie z galeri"),
-              ),
-              ElevatedButton(
-                onPressed: _pickImageFromCamera,
-                child: const Text("Zrob zdjecie"),
-              ),
-              _displayedImage != null
-                  ? Image.file(
-                      _displayedImage!,
-                      height: 100,
-                    )
-                  : Container(),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
-                child: const Text("Wybierz lokalizacje"),
+                child: const Text("Wskaż lokalizacje na mapie"),
               ),
+              Container(
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _pickImageFromGallery,
+                        child: const Text("Wybierz zdjęcie"),
+                      ),
+                      ElevatedButton(
+                        onPressed: _pickImageFromCamera,
+                        child: const Text("Zrob zdjęcie"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              _displayedImage != null
+                  ? Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 5),
+                      ),
+                      child: Column(
+                        children: [
+                          Image.file(
+                            _displayedImage!,
+                            height: 120,
+                          ),
+                          ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _displayedImage = null;
+                                });
+                              },
+                              child: Text("Usuń zdjęcie")),
+                        ],
+                      ))
+                  : Container(),
+              ElevatedButton(
+                  onPressed: () async {
+                    var res = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SimpleBarcodeScannerPage(),
+                        ));
+                    setState(() {
+                      if (res is String) {
+                        barcode = res;
+                      }
+                    });
+                  },
+                  child: (barcode.isEmpty || barcode == "-1")
+                      ? const Text("Skanuj kod")
+                      : Text(barcode)),
               ElevatedButton(
                 onPressed: _addOffer,
                 child: const Icon(Icons.add),
               ),
-              //const SizedBox(height: 10),
-              //Text("Wspolrzedne: $selectedLocationText"),
             ],
           ),
         ),

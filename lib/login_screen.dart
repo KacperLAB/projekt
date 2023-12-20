@@ -21,12 +21,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
     final GoogleSignInAuthentication gAuth = await gUser!.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: gAuth.accessToken,
-      idToken: gAuth.idToken
-    );
+        accessToken: gAuth.accessToken, idToken: gAuth.idToken);
     return await FirebaseAuth.instance.signInWithCredential(credential);
   }
-
 
   Future<void> loginUser() async {
     try {
@@ -57,19 +54,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: const InputDecoration(labelText: "Haslo")),
             ElevatedButton(
                 onPressed: () {
-                  if(_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wypełnij wszystkie pola'),
+                  if (_emailController.text.isEmpty ||
+                      _passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Wypełnij wszystkie pola'),
                     ));
-                  }
-                  else {
+                  } else {
                     loginUser();
                     print(errorMessage);
-                    Navigator.pop(context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()));
+                    Navigator.pop(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()));
                   }
                 },
                 child: const Text("Zaloguj")),
-            ElevatedButton(onPressed: signInWithGoogle, child: const Text("Google")),
+            ElevatedButton(
+                onPressed: signInWithGoogle, child: const Text("Google")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.push(context,
