@@ -101,18 +101,19 @@ class _UserOffersScreenState extends State<UserOffersScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Nazwa: ${offer.offerData!.nazwa!}"),
-                    Text("Kategoria: ${offer.offerData!.kategoria!}"),
-                    Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
-                    Text("Przecena: ${offer.offerData!.przecena!}%"),
-                    Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
+                    Text("Name: ${offer.offerData!.nazwa!}"),
+                    Text("Category: ${offer.offerData!.kategoria!}"),
+                    Text("Price: ${offer.offerData!.nowa_cena!} zł"),
+                    Text("Discount: ${offer.offerData!.przecena!}%"),
+                    Text("Valid from: ${offer.offerData!.data_od!.split(' ')[0]}"),
+                    Text("Valid to: ${offer.offerData!.data_do!.split(' ')[0]}"),
                   ],
                 ),
                 if (offer.offerData!.image_path != "")
                   Container(
                     height: 80,
                     width: 80,
-                    margin: const EdgeInsets.only(left: 10), // Dodane odstępu
+                    margin: const EdgeInsets.only(left: 10),
                     decoration: BoxDecoration(
                       border: Border.all(width: 5),
                     ),

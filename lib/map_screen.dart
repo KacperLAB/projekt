@@ -9,13 +9,14 @@ class MapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     double? latitude = offer.offerData?.latitude;
     double? longitude = offer.offerData?.longitude;
 
     if (latitude != null && longitude != null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text("Lokalizacja oferty"),
+          title: const Text("Offer location"),
         ),
         body: GoogleMap(
           initialCameraPosition: CameraPosition(
@@ -37,10 +38,10 @@ class MapScreen extends StatelessWidget {
       // gdy latitude lub longitude są null
       return Scaffold(
         appBar: AppBar(
-          title: const Text("Błąd"),
+          title: const Text("Error"),
         ),
         body: const Center(
-          child: Text("Brak dostępnych danych o lokalizacji."),
+          child: Text("Location data not available"),
         ),
       );
     }

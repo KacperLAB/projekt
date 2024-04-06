@@ -23,7 +23,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   String? user = firebaseAuth.currentUser?.email;
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
-  List<Comment> comments = [];
+
   List<Rating> ratings = [];
 
   int positiveRatings = 0;
@@ -38,6 +38,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     hasUserFollowed();
   }
 
+  List<Comment> comments = [];
   void fetchComments() async {
     DataSnapshot dataSnapshot =
         await dbRef.child('Oferty/${widget.offer.key}/komentarze').get();
@@ -52,7 +53,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           timestamp: value['timestamp'],
         ));
       });
-
       setState(() {
         comments = commentList;
       });
@@ -121,7 +121,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Już wcześniej oceniłeś tę ofertę.'),
+          content: Text('Offer already rated'),
         ),
       );
     }
@@ -140,35 +140,28 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       // Informacja dla użytkownika, że już wcześniej ocenił ofertę
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Już wcześniej oceniłeś tę ofertę.'),
+          content: Text('Offer already rated'),
         ),
       );
     }
   }
 
   void addComment() {
-    String commentText = _commentController.text
-        .trim(); // Usunięcie białych znaków z początku i końca
-
+    String commentText = _commentController.text.trim();
     if (commentText.isNotEmpty) {
       String timestamp = DateTime.now().toUtc().toString();
-
       Comment newComment = Comment(
         author: user!,
         text: commentText,
         timestamp: timestamp,
       );
-
-      dbRef
-          .child('Oferty/${widget.offer.key}/komentarze')
-          .push()
+      dbRef.child('Oferty/${widget.offer.key}/komentarze').push()
           .set(newComment.toJson());
       _commentController.clear();
       fetchComments();
     } else {
-      // Komunikat, że komentarz nie może być pusty
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Komentarz nie może być pusty.'),
+        content: Text("Comment can't be empty !"),
       ));
     }
   }
@@ -176,36 +169,25 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   void toggleFollow() async {
     String userID = firebaseAuth.currentUser?.uid ?? '';
     String? offerID = widget.offer.key;
-
-    // Pobierz referencję do danych obserwujących dla danej oferty
     DatabaseReference followersRef = dbRef.child('Oferty/$offerID/obserwujacy');
-
-    // Sprawdź, czy użytkownik już obserwuje ofertę
-    DatabaseEvent event =
-        await followersRef.orderByChild('uid').equalTo(userID).once();
+    DatabaseEvent event = await followersRef.orderByChild('uid').equalTo(userID).once();
     DataSnapshot snapshot = event.snapshot;
-
     Map<dynamic, dynamic>? values = snapshot.value as Map<dynamic, dynamic>?;
-
     if (values == null || values.isEmpty) {
-      // Jeśli użytkownik nie obserwuje oferty, dodaj go do listy obserwujących
       DatabaseReference newFollowerRef = followersRef.push();
       newFollowerRef.set({
         "uid": userID,
-        "email": user, // Zakładając, że 'user' jest zdefiniowane wcześniej
+        "email": user,
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Dodano do obserwowanych.'),
+        const SnackBar(content: Text('Added to followed'),
         ),
       );
     } else {
-      // Jeśli użytkownik już obserwuje ofertę, usuń go z listy obserwujących
       values.forEach((key, value) {
         dbRef.child('Oferty/$offerID/obserwujacy/$key').remove();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Usunięto z obserwowanych.'),
+          const SnackBar(content: Text('Removed from followed'),
           ),
         );
       });
@@ -245,7 +227,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Wycentruj w pionie
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (widget.offer.offerData!.image_path != "")
@@ -266,13 +248,13 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                     ),
                     child: Image.asset('assets/placeholder_image.png'),
                   ),
-                const Text("Opis: "),
+                const Text("Description: "),
                 Text(widget.offer.offerData!.opis!),
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Cena: "),
+                      const Text("Price: "),
                       Text("${widget.offer.offerData!.stara_cena!} zł",
                           style: const TextStyle(
                               decoration: TextDecoration.lineThrough,
@@ -287,7 +269,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Przecena: "),
+                      const Text("Discount: "),
                       Text(
                         "-${widget.offer.offerData!.przecena!}%",
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -299,10 +281,10 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Ważne od "),
+                      const Text("Valid from "),
                       Text("${widget.offer.offerData!.data_od!.split(' ')[0]}",
                           style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const Text(" do "),
+                      const Text(" to "),
                       Text("${widget.offer.offerData!.data_do!.split(' ')[0]}",
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
@@ -323,7 +305,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content:
-                                    Text('Już wcześniej oceniłeś tę ofertę.'),
+                                    Text('Offer already rated'),
                               ),
                             );
                           }
@@ -334,7 +316,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                           backgroundColor: MaterialStateProperty.all(
                             hasUserRatedPositive() ? Colors.green : null,
                           ),
-                          // Dodaj stylizację obramowania, gdy przycisk został oceniony wcześniej
                           side: MaterialStateProperty.all(
                             BorderSide(
                               color: hasUserRatedPositive()
@@ -354,7 +335,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content:
-                                    Text('Już wcześniej oceniłeś tę ofertę.'),
+                                    Text('Offer already rated'),
                               ),
                             );
                           }
@@ -365,7 +346,6 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                           backgroundColor: MaterialStateProperty.all(
                             hasUserRatedNegative() ? Colors.red : null,
                           ),
-                          // Dodaj stylizację obramowania, gdy przycisk został oceniony wcześniej
                           side: MaterialStateProperty.all(
                             BorderSide(
                               color: hasUserRatedNegative()
@@ -386,7 +366,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                       ),
                     );
                   },
-                  child: const Text("Pokaż na mapie"),
+                  child: const Text("Show on map"),
                 ),
                 if (firebaseAuth.currentUser?.email != null &&
                     widget.offer.offerData!.autor_id! !=
@@ -424,16 +404,16 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                       }
                     });
                   },
-                  child: const Text("Porównaj kod"),
+                  child: const Text("Compare barcode"),
                 ),
                 if (barcode.isNotEmpty &&
                     barcode == widget.offer.offerData!.code! &&
                     widget.offer.offerData!.code!.isNotEmpty)
-                  const Text("Kod poprawny"),
+                  const Text("Matching barcode"),
                 if (barcode.isNotEmpty &&
                     barcode != widget.offer.offerData!.code! &&
                     widget.offer.offerData!.code!.isNotEmpty)
-                  const Text("Kod niepoprawny"),
+                  const Text("Barcode not matching"),
                 if (firebaseAuth.currentUser?.email != null)
                   TextField(
                     controller: _commentController,
@@ -441,7 +421,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                     minLines: 1,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: "Komentarz",
+                      hintText: "Comment",
                     ),
                   )
                 else
@@ -449,12 +429,12 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                 if (firebaseAuth.currentUser?.email != null)
                   ElevatedButton(
                     onPressed: addComment,
-                    child: const Text("Dodaj komentarz"),
+                    child: const Text("Add comment"),
                   )
                 else
                   Container(),
-                const Text("Komentarze:"),
-                Container(
+                const Text("Comments:"),
+                SizedBox(
                   height: MediaQuery.of(context).size.height * 0.5,
                   child: comments.isNotEmpty
                       ? ListView.builder(
@@ -463,11 +443,11 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                             return ListTile(
                               title: Text(comments[index].text),
                               subtitle:
-                                  Text("Autor: ${comments[index].author}"),
+                                  Text("Author: ${comments[index].author}"),
                             );
                           },
                         )
-                      : const Center(child: Text("Brak komentarzy.")),
+                      : const Center(child: Text("No comments.")),
                 ),
               ],
             ),

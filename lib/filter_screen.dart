@@ -21,12 +21,13 @@ class _FilterScreenState extends State<FilterScreen> {
   double? maxDistance;
 
   final List<String> allCategories = [
-    "Owoce",
-    "Warzywa",
-    "Mięso",
-    "Nabiał",
-    "Napoje",
-    "Inne"
+    "Fruits",
+    "Vegetables",
+    "Meat",
+    "Dairy",
+    "Beverages",
+    "Sweets",
+    "Other"
   ];
 
   TextEditingController priceFromController = TextEditingController();
@@ -37,7 +38,7 @@ class _FilterScreenState extends State<FilterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Filtruj oferty"),
+        title: const Text("Filter offers"),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -46,7 +47,7 @@ class _FilterScreenState extends State<FilterScreen> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ExpansionTile(
-                title: const Text("Kategorie"),
+                title: const Text("Categories"),
                 children: [
                   ListView.builder(
                     shrinkWrap: true,
@@ -79,7 +80,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 onChanged: (value) {
                   priceFrom = value.isNotEmpty ? value : null;
                 },
-                decoration: const InputDecoration(labelText: "Cena od"),
+                decoration: const InputDecoration(labelText: "Price from"),
               ),
             ),
             Padding(
@@ -90,7 +91,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 onChanged: (value) {
                   priceTo = value.isNotEmpty ? value : null;
                 },
-                decoration: const InputDecoration(labelText: "Cena do"),
+                decoration: const InputDecoration(labelText: "Price to"),
               ),
             ),
             Padding(
@@ -102,7 +103,7 @@ class _FilterScreenState extends State<FilterScreen> {
                   maxDistance = value.isNotEmpty ? double.parse(value) : null;
                 },
                 decoration: const InputDecoration(
-                  labelText: "Maksymalna odległość (km)",
+                  labelText: "Max distance (km)",
                 ),
               ),
             ),
@@ -116,7 +117,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 );
                 Navigator.pop(context);
               },
-              child: const Text("Zastosuj"),
+              child: const Text("Apply"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -130,7 +131,7 @@ class _FilterScreenState extends State<FilterScreen> {
                   selectedCategories.clear();
                 });
               },
-              child: const Text("Wyczyść"),
+              child: const Text("Clear"),
             ),
           ],
         ),

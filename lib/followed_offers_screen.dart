@@ -25,7 +25,7 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Obserwowane ogłoszenia"),
+        title: const Text("Followed offers"),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -38,8 +38,6 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
     );
   }
 
-  // Reszta kodu pozostaje bez zmian
-
   void retrieveOffersData() {
     followedOffersList.clear();
     String? currentUserID = firebaseAuth.currentUser?.uid;
@@ -50,8 +48,6 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
         OfferData offerData = OfferData.fromJson(data.snapshot.value as Map);
         DateTime dataOd = DateTime.parse(offerData.data_od!);
         DateTime dataDo = DateTime.parse(offerData.data_do!);
-
-        // Sprawdź, czy obserwujący aktualnie zalogowanego użytkownika znajduje się w liście obserwujących oferty
         dbRef
             .child('Oferty/${data.snapshot.key}/obserwujacy')
             .orderByChild('uid')
@@ -63,16 +59,13 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
               snapshot.value as Map<dynamic, dynamic>?;
 
           if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
-            // Oferta jest aktualna
             if (followerData != null && followerData.isNotEmpty) {
-              // Znaleziono obserwującego, dodaj ofertę do listy
               Offer offer = Offer(key: data.snapshot.key, offerData: offerData);
               followedOffersList.add(offer);
               setState(() {});
             }
           } else if (currentDate.isAfter(dataOd) &&
               currentDate.isAfter(dataDo)) {
-            // Oferta przeterminowana, usuń z bazy danych
             dbRef.child("Oferty").child(data.snapshot.key!).remove();
           }
         });
@@ -103,13 +96,13 @@ class _FollowedOffersScreenState extends State<FollowedOffersScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Nazwa: ${offer.offerData!.nazwa!}"),
-                Text("Kategoria: ${offer.offerData!.kategoria!}"),
+                Text("Name: ${offer.offerData!.nazwa!}"),
+                Text("Category: ${offer.offerData!.kategoria!}"),
                 //Text(offer.offerData!.stara_cena!),
-                Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
-                Text("Przecena: ${offer.offerData!.przecena!}%"),
+                Text("Price: ${offer.offerData!.nowa_cena!} zł"),
+                Text("Discount: ${offer.offerData!.przecena!}%"),
                 //Text(offer.offerData!.data_od!.split(' ')[0]),
-                Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
+                Text("Valid to: ${offer.offerData!.data_do!.split(' ')[0]}"),
               ],
             ),
             if (offer.offerData!.image_path != "")

@@ -30,7 +30,7 @@ class HomeScreen extends StatefulWidget {
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _HomeScreenState extends State<HomeScreen> {
-  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
 
   //String _sortBy = "data_od"; // Domyślne sortowanie
   final TextEditingController _nameController = TextEditingController();
@@ -38,8 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _newPriceController = TextEditingController();
   String? user = firebaseAuth.currentUser?.email;
 
-  List<Offer> offerList = [];
-  List<Offer> filteredOfferList = [];
+
   bool ascending = true;
   bool isLoading = false;
   String barcode = "";
@@ -70,8 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   final listPickerField = ListPickerField(
-    label: "Kategoria",
-    items: const ["Owoce", "Warzywa", "Mięso", "Nabiał", "Napoje", "Inne"],
+    label: "Category",
+    items: const ["Fruits",
+      "Vegetables",
+      "Meat",
+      "Dairy",
+      "Beverages",
+      "Sweets",
+      "Other"],
   );
 
   @override
@@ -89,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute<ProfileScreen>(
                     builder: (context) => ProfileScreen(
                       appBar: AppBar(
-                        title: const Text("Mój profil"),
+                        title: const Text("My profile"),
                       ),
                       actions: [
                         SignedOutAction((context) {
@@ -107,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(builder: (context) => const AuthGate()));
               }
             },
-            tooltip: "Profil",
+            tooltip: "Profile",
           ),
           if (firebaseAuth.currentUser?.email != null)
             IconButton(
@@ -118,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (context) => FollowedOffersScreen()));
               },
               icon: const Icon(Icons.favorite),
-              tooltip: "Obserwowane",
+              tooltip: "Followed",
             ),
           if (firebaseAuth.currentUser?.email != null)
             IconButton(
@@ -130,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 await retrieveOfferData();
               },
               icon: const Icon(Icons.my_library_add),
-              tooltip: "Moje ogłoszenia",
+              tooltip: "My offers",
             ),
         ],
         automaticallyImplyLeading: false,
@@ -165,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(builder: (context) => const AuthGate()));
           }
         },
-        tooltip: "Dodaj ogłoszenie",
+        tooltip: "Add offer",
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -228,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     barcode = res;
                   }
                 });
+                // ignore: use_build_context_synchronously
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -235,18 +241,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             BarcodeOffersScreen(barcode: barcode)));
               },
               icon: const Icon(Icons.barcode_reader),
-              tooltip: "Szukaj po kodzie",
+              tooltip: "Search by barcode",
             ),
           ],
         ),
       ),
     );
   }
+  
+  List<Offer> offerList = [];
+  List<Offer> filteredOfferList = [];
+  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
-  //wczytywanie ofert z bazy
   Future<void> retrieveOfferData() async {
     offerList.clear();
-    filteredOfferList.clear(); // Wyczyść również filteredStOfferList
+    filteredOfferList.clear();
     final DateTime currentDate = DateTime.now();
     dbRef.child("Oferty").onChildAdded.listen((data) async {
       OfferData offerData = OfferData.fromJson(data.snapshot.value as Map);
@@ -255,11 +264,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (currentDate.isAfter(dataOd) && currentDate.isBefore(dataDo)) {
         Offer offer = Offer(key: data.snapshot.key, offerData: offerData);
         offerList.add(offer);
-        filteredOfferList.add(offer); // Dodaj ofertę do filteredOfferList
+        filteredOfferList.add(offer);
         setState(() {});
       } else if (currentDate.isAfter(dataOd) && currentDate.isAfter(dataDo)) {
         String imagePath = offerData.image_path ?? "";
-        // Usuń obraz z Firebase Storage
         if (imagePath.isNotEmpty) {
           await FirebaseStorage.instance.refFromURL(imagePath).delete();
         }
@@ -268,7 +276,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  //widget pojedynczej oferty
   Widget offerWidget(Offer offer) {
     return InkWell(
       onTap: () {
@@ -291,13 +298,11 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Nazwa: ${offer.offerData!.nazwa!}"),
-                Text("Kategoria: ${offer.offerData!.kategoria!}"),
-                //Text(offer.offerData!.stara_cena!),
-                Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
-                Text("Przecena: ${offer.offerData!.przecena!}%"),
-                //Text(offer.offerData!.data_od!.split(' ')[0]),
-                Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
+                Text("Name: ${offer.offerData!.nazwa!}"),
+                Text("Category: ${offer.offerData!.kategoria!}"),
+                Text("Price: ${offer.offerData!.nowa_cena!} zł"),
+                Text("Discount: ${offer.offerData!.przecena!}%"),
+                Text("Valid to: ${offer.offerData!.data_do!.split(' ')[0]}"),
               ],
             ),
             if (offer.offerData!.image_path != "")
@@ -313,12 +318,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 height: 120,
                 width: 120,
-                decoration: BoxDecoration(
-                  border: Border.all(width: 5),
+                decoration: BoxDecoration(border: Border.all(width: 5),
                 ),
-                child: Image.asset(
-                    'assets/placeholder_image.png' // Zastępcze zdjęcie
-                    ),
+                child: Image.asset('assets/placeholder_image.png'),
               ),
           ],
         ),
@@ -326,12 +328,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Funkcja sortująca oferty
   void sortOfferList(String sortBy, bool ascending) {
     switch (sortBy) {
       case "nazwa":
-        filteredOfferList
-            .sort((a, b) => a.offerData!.nazwa!.compareTo(b.offerData!.nazwa!));
+        filteredOfferList.sort((a, b) => a.offerData!.nazwa!
+            .compareTo(b.offerData!.nazwa!));
         break;
       case "data_od":
         filteredOfferList.sort((a, b) => DateTime.parse(a.offerData!.data_od!)
@@ -354,7 +355,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
-  //Funkcja filtrujaca
   void applyFilter({
     List<String> categories = const [],
     String? priceFrom,
@@ -369,12 +369,12 @@ class _HomeScreenState extends State<HomeScreen> {
     LocationData? userLocation = await getUserLocation();
 
     if (userLocation != null) {
+
       filteredOfferList.addAll(offerList.where((offer) {
-        // Filtruj kategorie
+
         bool categoryFilter = categories.isEmpty ||
             categories.contains(offer.offerData!.kategoria!);
 
-        // Filtruj cenę
         bool priceFilter = true;
         if (priceFrom != null && priceTo != null) {
           double offerPrice = double.parse(offer.offerData!.nowa_cena ?? "0");
@@ -383,7 +383,6 @@ class _HomeScreenState extends State<HomeScreen> {
           priceFilter = offerPrice >= from && offerPrice <= to;
         }
 
-        // Filtruj odległość
         bool distanceFilter = true;
         if (maxDistance != null) {
           if (offer.offerData!.latitude != null &&
@@ -396,8 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
             distanceFilter = offerDistance <= maxDistance;
           } else {
-            distanceFilter =
-                false; // Brak współrzędnych oferty, nie uwzględniaj jej w filtrze odległości
+            distanceFilter = false;
           }
         }
 
@@ -423,14 +421,12 @@ double calculateDistance(
     offerLatitude,
     offerLongitude,
   );
-  // zamiana z metrow na kilometry
   double distanceInKilometers = distanceInMeters / 1000;
   return distanceInKilometers;
 }
 
 Future<LocationData?> getUserLocation() async {
   Location location = Location();
-
   try {
     return await location.getLocation();
   } catch (e) {

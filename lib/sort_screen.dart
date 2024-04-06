@@ -13,7 +13,7 @@ class SortScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Sortuj oferty"),
+          title: const Text("Sort offers"),
         ),
         body: Center(
           child: Column(
@@ -24,56 +24,56 @@ class SortScreen extends StatelessWidget {
                   sortOfferList("nazwa", true);
                   Navigator.pop(context);
                 },
-                child: const Text("Sortuj po nazwie A-Z"),
+                child: const Text("Sort by name A-Z"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("nazwa", false);
                   Navigator.pop(context);
                 },
-                child: const Text("Sortuj po nazwie Z-A"),
+                child: const Text("Sort by name Z-A"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("data_od", true);
                   Navigator.pop(context);
                 },
-                child: const Text("Dodane najpozniej"),
+                child: const Text("Latest added"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("data_od", false);
                   Navigator.pop(context);
                 },
-                child: const Text("Dodane najwczesniej"),
+                child: const Text("Earliest added"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("przecena", false);
                   Navigator.pop(context);
                 },
-                child: const Text("Przecena malejąco"),
+                child: const Text("Discount descending"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("przecena", true);
                   Navigator.pop(context);
                 },
-                child: const Text("Przecena rosnąco"),
+                child: const Text("Discount ascending"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("cena", true);
                   Navigator.pop(context);
                 },
-                child: const Text("Cena rosnąco"),
+                child: const Text("Price ascending"),
               ),
               ElevatedButton(
                 onPressed: () {
                   sortOfferList("cena", false);
                   Navigator.pop(context);
                 },
-                child: const Text("Cena malejąco"),
+                child: const Text("Price descending"),
               ),
             ],
           ),

@@ -29,14 +29,14 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Pasujące produkty"),
+        title: const Text("Matching products"),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             if (barcodeOffersList.isEmpty)
               const Center(
-                  child: Text("Brak wyników", textAlign: TextAlign.center))
+                  child: Text("No results", textAlign: TextAlign.center))
             else
               for (int i = 0; i < barcodeOffersList.length; i++)
                 offerWidget(barcodeOffersList[i])
@@ -97,13 +97,13 @@ class _BarcodeOffersScreenState extends State<BarcodeOffersScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Nazwa: ${offer.offerData!.nazwa!}"),
-                Text("Kategoria: ${offer.offerData!.kategoria!}"),
+                Text("Name: ${offer.offerData!.nazwa!}"),
+                Text("Category: ${offer.offerData!.kategoria!}"),
                 //Text(offer.offerData!.stara_cena!),
-                Text("Cena: ${offer.offerData!.nowa_cena!} zł"),
-                Text("Przecena: ${offer.offerData!.przecena!}%"),
+                Text("Price: ${offer.offerData!.nowa_cena!} zł"),
+                Text("Discount: ${offer.offerData!.przecena!}%"),
                 //Text(offer.offerData!.data_od!.split(' ')[0]),
-                Text("Ważne do: ${offer.offerData!.data_do!.split(' ')[0]}"),
+                Text("Valid to: ${offer.offerData!.data_do!.split(' ')[0]}"),
               ],
             ),
             if (offer.offerData!.image_path != "")

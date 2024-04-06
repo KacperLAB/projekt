@@ -19,16 +19,21 @@ class FormScreen extends StatefulWidget {
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
 class _FormScreenState extends State<FormScreen> {
-  String selectedLocationText = ""; //do testu lokalizacji
   final listPickerField = ListPickerField(
-    label: "Kategoria",
-    items: const ["Owoce", "Warzywa", "Mięso", "Nabiał", "Napoje", "Inne"],
+    label: "Category",
+    items: const ["Fruits",
+      "Vegetables",
+      "Meat",
+      "Dairy",
+      "Beverages",
+      "Sweets",
+      "Other"],
   );
 
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-  FirebaseStorage storage = FirebaseStorage.instance;
 
-  File? _displayedImage;
+
+
   String barcode = "";
 
   late GoogleMapController _mapController;
@@ -43,13 +48,13 @@ class _FormScreenState extends State<FormScreen> {
       setState(() {
         _selectedLocation =
             LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
-        selectedLocationText =
-            "Latitude: ${_selectedLocation!.latitude}, Longitude: ${_selectedLocation!.longitude}";
       });
     } catch (e) {
       print("Error getting location: $e");
     }
   }
+
+  File? _displayedImage;
 
   Future<void> _pickImageFromGallery() async {
     XFile? pickedImage =
@@ -71,12 +76,14 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+  FirebaseStorage storage = FirebaseStorage.instance;
+
   Future<String> _uploadImage(String offerKey) async {
     String imagePath = "";
     if (_displayedImage != null) {
       try {
-        await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!);
-        imagePath = await storage.ref('images/$offerKey.jpg').getDownloadURL();
+        await storage.ref('images/$offerKey.jpg').putFile(_displayedImage!); //przesłanie pliku
+        imagePath = await storage.ref('images/$offerKey.jpg').getDownloadURL(); //pobranie URL
       } on FirebaseException catch (e) {
         print("Error uploading image: $e");
       }
@@ -95,9 +102,6 @@ class _FormScreenState extends State<FormScreen> {
 
   DateTime dateFrom = DateTime.now();
   DateTime dateTo = DateTime.now().add(const Duration(days: 1));
-  int ts = 0;
-  int ts2 = 0;
-
   Future<void> _dateFrom(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -108,11 +112,9 @@ class _FormScreenState extends State<FormScreen> {
     if (picked != null) {
       setState(() {
         dateFrom = picked;
-        ts = dateFrom.millisecondsSinceEpoch;
       });
     }
   }
-
   Future<void> _dateTo(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -120,29 +122,20 @@ class _FormScreenState extends State<FormScreen> {
       firstDate: dateFrom.add(const Duration(days: 1)),
       lastDate: DateTime(2101),
     );
-
     if (picked != null) {
       setState(() {
         dateTo = picked;
-        ts2 = dateTo.millisecondsSinceEpoch;
       });
     }
   }
 
   Future<void> _addOffer() async {
-    if (ts2 >= ts) {
       double stara = double.parse(_oldPriceController.text);
       double nowa = double.parse(_newPriceController.text);
       double przecena = 100 - ((nowa * 100) / stara);
-
-      // Pobierz klucz nowo dodanej oferty
       DatabaseReference newOfferRef = dbRef.child("Oferty").push();
       String offerKey = newOfferRef.key!;
-
-      // Prześlij zdjęcie do Cloud Storage
       String imagePath = await _uploadImage(offerKey);
-
-      // Utwórz mapę danych oferty
       Map<String, dynamic> data = {
         "nazwa": _nameController.text.toString(),
         "kategoria": listPickerField.value,
@@ -158,29 +151,7 @@ class _FormScreenState extends State<FormScreen> {
         "code": barcode,
         "opis": _descriptionController.text.toString()
       };
-
-      // Zapisz ofertę w bazie danych
-      newOfferRef.set(data).then((value) {
-        Navigator.of(context).pop();
-      });
-    } else {
-      // Obsługa błędu - użytkownik musi wybrać daty
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Błąd"),
-            content: const Text("Proszę wybrać daty"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
-    }
+      newOfferRef.set(data).then((value) {Navigator.of(context).pop();});
   }
 
   Future<void> _pickLocationOnMap() async {
@@ -190,7 +161,7 @@ class _FormScreenState extends State<FormScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Wybierz lokalizację na mapie'),
+          title: const Text('Pick location on map'),
           content: SizedBox(
             height: 300,
             width: 300,
@@ -207,8 +178,6 @@ class _FormScreenState extends State<FormScreen> {
               onTap: (LatLng point) {
                 setState(() {
                   _selectedLocation = point;
-                  selectedLocationText =
-                      "Latitude: ${point.latitude}, Longitude: ${point.longitude}";
                 });
                 Navigator.of(context).pop();
               },
@@ -219,7 +188,7 @@ class _FormScreenState extends State<FormScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Anuluj'),
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -237,7 +206,7 @@ class _FormScreenState extends State<FormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dodaj nowe ogłoszenie"),
+        title: const Text("Add new offer"),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -249,40 +218,40 @@ class _FormScreenState extends State<FormScreen> {
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Nazwa"),
+                    border: OutlineInputBorder(), hintText: "Name"),
               ),
               TextField(
                 controller: _descriptionController,
                 maxLines: 5,
                 minLines: 2,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Opis"),
+                    border: OutlineInputBorder(), hintText: "Description"),
               ),
               TextField(
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 controller: _oldPriceController,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Stara cena"),
+                    border: OutlineInputBorder(), hintText: "Old price"),
               ),
               TextField(
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 controller: _newPriceController,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(), hintText: "Nowa cena"),
+                    border: OutlineInputBorder(), hintText: "New price"),
               ),
               Container(
                 child: Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Text("Data od: "),
+                      const Text("Date from: "),
                       ElevatedButton(
                         onPressed: () => _dateFrom(context),
                         child: Text("${dateFrom.toLocal()}".split(' ')[0]),
                       ),
-                      Text("Data do: "),
+                      const Text("Date to: "),
                       ElevatedButton(
                         onPressed: () => _dateTo(context),
                         child: Text("${dateTo.toLocal()}".split(' ')[0]),
@@ -293,7 +262,7 @@ class _FormScreenState extends State<FormScreen> {
               ),
               ElevatedButton(
                 onPressed: _pickLocationOnMap,
-                child: const Text("Wskaż lokalizacje na mapie"),
+                child: const Text("Pick location on map"),
               ),
               Container(
                 child: Center(
@@ -302,11 +271,11 @@ class _FormScreenState extends State<FormScreen> {
                     children: [
                       ElevatedButton(
                         onPressed: _pickImageFromGallery,
-                        child: const Text("Wybierz zdjęcie"),
+                        child: const Text("Pick photo"),
                       ),
                       ElevatedButton(
                         onPressed: _pickImageFromCamera,
-                        child: const Text("Zrob zdjęcie"),
+                        child: const Text("Take photo"),
                       ),
                     ],
                   ),
@@ -329,7 +298,7 @@ class _FormScreenState extends State<FormScreen> {
                                   _displayedImage = null;
                                 });
                               },
-                              child: Text("Usuń zdjęcie")),
+                              child: const Text("Delete photo")),
                         ],
                       ))
                   : Container(),
@@ -348,7 +317,7 @@ class _FormScreenState extends State<FormScreen> {
                     });
                   },
                   child: (barcode.isEmpty || barcode == "-1")
-                      ? const Text("Skanuj kod")
+                      ? const Text("Scan barcode")
                       : Text(barcode)),
               ElevatedButton(
                 onPressed: _addOffer,

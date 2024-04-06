@@ -14,7 +14,7 @@ class AllMapScreen extends StatefulWidget {
 
 class _AllMapScreenState extends State<AllMapScreen> {
   late GoogleMapController _mapController;
-  Set<Marker> _markers = Set();
+
   bool isLoading = false;
 
   @override
@@ -24,6 +24,7 @@ class _AllMapScreenState extends State<AllMapScreen> {
     _populateMarkers();
   }
 
+  final Set<Marker> _markers = {};
   void _populateMarkers() {
     for (var offer in widget.offerList) {
       if (offer.offerData!.latitude != null &&
@@ -70,7 +71,7 @@ class _AllMapScreenState extends State<AllMapScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
+            const SizedBox(
               height: 350,
               width: 350,
               child: Center(
@@ -81,14 +82,14 @@ class _AllMapScreenState extends State<AllMapScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text("Anuluj"))
+                child: const Text("Cancel"))
           ],
         ),
       );
     } else {
       return Scaffold(
         appBar: AppBar(
-          title: const Text("Mapa Ogłoszeń"),
+          title: const Text("Offers map"),
         ),
         body: GoogleMap(
           onMapCreated: (controller) {
@@ -100,7 +101,6 @@ class _AllMapScreenState extends State<AllMapScreen> {
           initialCameraPosition: CameraPosition(
             target: LatLng(
                 _selectedLocation!.latitude, _selectedLocation!.longitude),
-            // Początkowe współrzędne mapy
             zoom: 10,
           ),
         ),
